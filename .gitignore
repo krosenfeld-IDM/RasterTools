@@ -5,3 +5,8 @@
 *.svg
 
 __pycache__/
+*.egg-info
+
+data/
+*.csv
+.idea
