@@ -2,13 +2,13 @@
 
 import geopandas as gpd
 import pandas as pd
+import rasterstats
 
 from pathlib import Path
-from rasterstats import zonal_stats
 from typing import Callable, Dict, List, Union
 
 
-def _from_raster(
+def _zonal_stats(
         raster,
         gdf: gpd.GeoDataFrame,
         stats_cols: Dict,
@@ -32,8 +32,12 @@ def _from_raster(
         @return:
         Pandas dataframe containing shape center points and calculated means values.
         """
-    adm_cols = adm_cols or ['NAME_0', 'NAME_1', 'NAME_2']  # todo: default_adm_cols
+    adm_cols = adm_cols or [c for c in list(gdf.columns.values) if c != "geometry"]
     cols = adm_cols + ["geometry"]
+
+    if gdf.crs is None:
+        gdf.crs = "EPSG:4326"
+
     gdf = gdf[cols].dissolve(adm_cols, as_index=False)
 
     if type(raster) == str:
@@ -55,7 +59,7 @@ def _from_raster(
 
     # Calculate zonal statistics.
     stats = stats_cols.keys()
-    zs = zonal_stats(gdf, raster, stats=stats, affine=affine, band_num=band, nodata=nodata, all_touched=True)
+    zs = rasterstats.zonal_stats(gdf, raster, stats=stats, affine=affine, band_num=band, nodata=nodata, all_touched=True)
     df_zs = pd.DataFrame(zs)
     df_zs = df_zs.rename(columns=stats_cols)
 
@@ -76,7 +80,7 @@ def _from_raster(
     return df
 
 
-def extract(
+def zonal_stats(
         rasters: Union[Dict],                           #List, str, Path, object
         shapes: Union[gpd.GeoDataFrame, str, Path],
         stats_cols: Dict,
@@ -103,7 +107,7 @@ def extract(
     args = {k: v for k, v in locals().items() if k not in ["rasters", "shapes"] and not k.startswith("_")}
     df_list = []
     for info, raster in rasters.items():
-        df = _from_raster(raster=raster, gdf=shapes, **args)
+        df = _zonal_stats(raster=raster, gdf=shapes, **args)
         df["info"] = info
         df_list.append(df)
 

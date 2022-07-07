@@ -1,12 +1,25 @@
 # User-specific files
 
 *.log
+
 *.png
 *.svg
+*.tif
+
+*.shp
+*.dbf
+*.shx
+
+*.zip
+
+*.id
 
 __pycache__/
-*.egg-info
 
-data/
+data*/
+results/
 *.csv
 .idea
+
+GDX.id
+gdx.key
