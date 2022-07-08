@@ -12,11 +12,7 @@ Main Features
 -------------
 - Process a single or multiple raster files
 - Add raster file metadata to the resulting dataframe.
-<<<<<<< HEAD
 - Use GeoPandas representative_point features to add admin location representative points.
-=======
-- Use GeoPandas representative_point features to add admin location representative points.
->>>>>>> dev
 - Use GeoPandas dissolve feature to apply zonal statistics on specified administrative level.
 """
 
