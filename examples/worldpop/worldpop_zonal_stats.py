@@ -25,5 +25,10 @@ df['pop'] = df['pop'].round(0).astype('Int64')
 
 # Save pop data to a .csv file.
 pop_dict = df.set_index('DOTNAME').to_dict()["pop"]
+
+for val in pop_dict:
+  if(not isinstance(pop_dict[val],int)):
+    pop_dict[val] = 0
+
 # Save file locally
 utils.save_json(pop_dict, json_path="results/zonal_pop.json", sort_keys=True)
