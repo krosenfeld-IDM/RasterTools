@@ -1,7 +1,6 @@
 pyshp==2.3.0
 requests==2.28.1
 ckanapi==4.7
-GDAL==3.4.3
 matplotlib==3.5.2
 geopandas~=0.11.0
 pandas~=1.4.3

@@ -2,7 +2,7 @@ import matplotlib.path as plt
 import numpy as np
 import shapefile
 
-from osgeo import gdal
+from PIL import Image
 from pathlib import Path
 from typing import Dict, Union
 from rastertools.shape import area_sphere
@@ -12,8 +12,7 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
     """Extract data from a raster"""
     assert Path(raster_file).is_file(), "Raster file not found."
     # Raster data
-    raster = gdal.Open(raster_file)
-    rast_b01 = raster.GetRasterBand(1)
+    raster = Image.open(raster_file)
 
     # Shapefiles
     sf1 = shapefile.Reader(str(shape_stem))
@@ -21,13 +20,12 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
     sf1r = sf1.records()
 
     # Extract data from raster
-    geo_dat = raster.GetGeoTransform()
-    x0 = geo_dat[0]
-    y0 = geo_dat[3]
-    dx = geo_dat[1]
-    dy = geo_dat[5]
+    x0 =  raster.getexif()[33922][3]
+    y0 =  raster.getexif()[33922][4]
+    dx =  raster.getexif()[33550][0]
+    dy = -raster.getexif()[33550][1]
 
-    dat_mat = rast_b01.ReadAsArray(0, 0, rast_b01.XSize, rast_b01.YSize)
+    dat_mat  = np.array(raster)
     xy_ints = np.argwhere(dat_mat > 0)
     sparce_data = np.zeros((xy_ints.shape[0], 3), dtype=float)
 
