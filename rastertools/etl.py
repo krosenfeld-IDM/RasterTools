@@ -59,7 +59,7 @@ def _zonal_stats(
 
     # Calculate zonal statistics.
     stats = stats_cols.keys()
-    zs = rasterstats.zonal_stats(gdf, raster, stats=stats, affine=affine, band_num=band, nodata=nodata, all_touched=True)
+    zs = rasterstats.zonal_stats(gdf, raster, stats=stats, affine=affine, band_num=band, nodata=nodata)
     df_zs = pd.DataFrame(zs)
     df_zs = df_zs.rename(columns=stats_cols)
 
