@@ -10,7 +10,7 @@ from rastertools import download, raster_clip, zonal_stats, utils
 
 # GDX Download
 os.environ['CKAN_API_KEY'] = Path("../../gdx.key").read_text()          # GDx API KEY
-shp = download("beb3d69a-00a1-4d30-8ee8-7c55a404d1c8", extract=True)    # DRC health zones shapefiles
+shp = download("23930ae4-cd30-41b8-b33d-278a09683bac", extract=True)    # DRC health zones shapefiles
 rst = download("ae05eb29-b9cf-4060-a8ac-5bfe314e6199")                  # WorldPop raster - DRC 2020, 1km, UN adj
 
 shape_file = [f for f in shp if Path(f).suffix == ".shp"][0]
