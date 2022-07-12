@@ -14,7 +14,7 @@ def get_remote(key_file=None) -> RemoteCKAN:
     if key_file is not None and Path(key_file).is_file():
         apikey = Path(key_file).read_text().strip()
     else:
-        apikey = os.getenv('CKAN_API_KEY')
+        apikey = os.getenv('CKAN_API_KEY').rstrip('\n')
 
     if apikey is None:
         raise ValueError("Unable to read GDX API key")
