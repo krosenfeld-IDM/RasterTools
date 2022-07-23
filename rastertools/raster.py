@@ -46,11 +46,9 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
         # Shapefile shape points
         sfsp = np.array(sf1s[k1].points)
 
-        # Null shape; possible error in shapefile?
+        # Null shape; error in shapefile
         if sfsp.shape[0] == 0:
-            data_dict[shape_name] = 0
-            print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
-            continue
+            raise Exception('Bad shapefile. No parts in shape.')
 
         # Subset data matrix for clipping
         xy_max = np.max(sfsp, axis=0)
@@ -59,7 +57,7 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
         clip_bool2 = np.logical_and(sparce_data[:, 0] < xy_max[0], sparce_data[:, 1] < xy_max[1])
         data_clip = sparce_data[np.logical_and(clip_bool1, clip_bool2), :]
 
-        # No data in shape; possible error in shapefile?
+        # No population in shape
         if data_clip.shape[0] == 0:
             data_dict[shape_name] = 0
             print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
@@ -67,10 +65,11 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
 
         # Track booleans (indicates if lat/long is interior)
         data_bool = np.zeros(data_clip.shape[0], dtype=bool)
+        prt_list  = list(sf1s[k1].parts) + [len(sfsp)]
 
         # Iterate over parts of shapefile
-        for k2 in range(len(sf1s[k1].parts) - 1):
-            shp_prt = sfsp[sf1s[k1].parts[k2]:sf1s[k1].parts[k2 + 1]]
+        for k2 in range(len(prt_list) - 1):
+            shp_prt = sfsp[prt_list[k2]:prt_list[k2 + 1]]
             path_shp = plt.Path(shp_prt, closed=True, readonly=True)
             area_prt = area_sphere(shp_prt)
 
@@ -80,21 +79,8 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
             else:
                 data_bool = np.logical_and(data_bool, np.logical_not(path_shp.contains_points(data_clip[:, :2])))
 
-        # Last piece of shapefile uses different indexing
-        shp_prt = sfsp[sf1s[k1].parts[-1]:]
-        path_shp = plt.Path(shp_prt, closed=True, readonly=True)
-        area_prt = area_sphere(shp_prt)
-
-        # Union of positive areas; intersection with negative areas
-        if area_prt > 0:
-            data_bool = np.logical_or(data_bool, path_shp.contains_points(data_clip[:, :2]))
-        else:
-            data_bool = np.logical_and(data_bool, np.logical_not(path_shp.contains_points(data_clip[:, :2])))
-
         # Record value to dict; print status
         data_dict[shape_name] = int(np.round(np.sum(data_clip[data_bool, 2]), 0))
         print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
 
     return data_dict
-
-
