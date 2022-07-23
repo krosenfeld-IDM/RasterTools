@@ -11,12 +11,12 @@ from rastertools import download, raster_clip, zonal_stats, utils
 # GDX Download
 os.environ['CKAN_API_KEY'] = Path("../../gdx.key").read_text()          # GDx API KEY
 shp = download("23930ae4-cd30-41b8-b33d-278a09683bac", extract=True)    # DRC health zones shapefiles
-rst = download("ae05eb29-b9cf-4060-a8ac-5bfe314e6199")                  # WorldPop raster - DRC 2020, 1km, UN adj
+rst = download("0c7241d0-a31f-451f-9df9-f7f3eff81e03", extract=True)    # WorldPop rasters - DRC, 1km, UN adj
 
 shape_file = [f for f in shp if Path(f).suffix == ".shp"][0]
 
 # Extract population from WorldPop using GADM shapes as selectors.
-df: pd.DataFrame = zonal_stats(rasters={2020: rst},
+df: pd.DataFrame = zonal_stats(rasters={2020: rst[-1]},
                                shapes=gpd.GeoDataFrame(gpd.read_file(shape_file)),
                                stats_cols={"sum": "pop"})
 
