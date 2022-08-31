@@ -1,3 +1,4 @@
+appdirs==1.4.4
 pyshp==2.3.0
 requests==2.28.1
 ckanapi==4.7

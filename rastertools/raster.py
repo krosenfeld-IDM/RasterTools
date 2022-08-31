@@ -3,8 +3,9 @@ import numpy as np
 import shapefile
 
 from PIL import Image
+from PIL.TiffTags import TAGS
 from pathlib import Path
-from typing import Dict, Union
+from typing import Any, Dict, List, Union
 from rastertools.shape import area_sphere
 
 
@@ -20,12 +21,17 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
     sf1r = sf1.records()
 
     # Extract data from raster
-    x0 =  raster.getexif()[33922][3]
-    y0 =  raster.getexif()[33922][4]
-    dx =  raster.getexif()[33550][0]
-    dy = -raster.getexif()[33550][1]
+    tags = get_tiff_tags(raster)
+    point = tags["ModelTiepointTag"]
+    scale = tags["ModelPixelScaleTag"]
+    x0, y0 = point[3], point[4]
+    dx, dy = scale[0], -scale[1]
 
-    dat_mat  = np.array(raster)
+    # Make sure values are in range
+    assert (-180 < x0 < 180 or 0 < x0 < 360) and -85 < y0 < 85, "Tie point coordinates have invalid range."
+    assert -1 < dx < 1 and -1 < dy < 1, "Pixel scale has invalid range."
+
+    dat_mat = np.array(raster)
     xy_ints = np.argwhere(dat_mat > 0)
     sparce_data = np.zeros((xy_ints.shape[0], 3), dtype=float)
 
@@ -65,7 +71,7 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
 
         # Track booleans (indicates if lat/long is interior)
         data_bool = np.zeros(data_clip.shape[0], dtype=bool)
-        prt_list  = list(sf1s[k1].parts) + [len(sfsp)]
+        prt_list = list(sf1s[k1].parts) + [len(sfsp)]
 
         # Iterate over parts of shapefile
         for k2 in range(len(prt_list) - 1):
@@ -84,3 +90,8 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
         print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
 
     return data_dict
+
+
+def get_tiff_tags(raster: Image) -> Dict[str, Any]:
+    # https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
+    return {TAGS[t]: raster.tag[t] for t in dict(raster.tag)}
