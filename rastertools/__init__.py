@@ -1,7 +1,7 @@
 
 from rastertools.data import download, get_remote, get_metadata
 from rastertools.raster import raster_clip, get_tiff_tags
-from rastertools.shape import area_sphere
+from rastertools.shape import ShapeView, area_sphere
 
 
 # module level doc-string
@@ -10,5 +10,5 @@ __doc__ = """
 """
 
 # Use __all__ to let type checkers know what is part of the public API.
-_all_ = ['get_remote', 'download', 'get_metadata', 'raster_clip', 'get_tiff_tags', 'area_sphere']
+_all_ = ['get_remote', 'download', 'get_metadata', 'raster_clip', 'get_tiff_tags', 'ShapeView', 'area_sphere']
 

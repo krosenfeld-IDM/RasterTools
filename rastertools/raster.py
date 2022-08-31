@@ -10,7 +10,7 @@ from PIL import Image
 from PIL.TiffTags import TAGS
 from pathlib import Path
 from typing import Any, Dict, List, Union, Callable
-from rastertools.shape import area_sphere
+from rastertools.shape import ShapeView
 
 
 def raster_clip(raster_file: Union[str, Path],
@@ -28,11 +28,6 @@ def raster_clip(raster_file: Union[str, Path],
     assert Path(raster_file).is_file(), "Raster file not found."
     # Raster data
     raster = Image.open(raster_file)
-
-    # Shapefiles
-    sf1 = shapefile.Reader(str(shape_stem))
-    sf1s = sf1.shapes()
-    sf1r = sf1.records()
 
     # Extract data from raster
     tags = get_tiff_tags(raster)
@@ -57,45 +52,33 @@ def raster_clip(raster_file: Union[str, Path],
     sparce_data[:, 1] = y0 + dy * xy_ints[:, 0] + dy / 2.0
     sparce_data[:, 2] = dat_mat[xy_ints[:, 0], xy_ints[:, 1]]
 
+    # Shapefiles
+    shapes = ShapeView.from_file(shape_stem, shape_attr)
+
     # Output dictionary
     data_dict = dict()
 
     # Iterate of shapes in shapefile
-    for k1 in range(len(sf1r)):
-
-        # First (only) field in shapefile record is dot-name
-        shape_name = sf1r[k1][shape_attr]
-
-        # Shapefile shape points
-        sfsp = np.array(sf1s[k1].points)
-
+    for k1, shp in enumerate(shapes):
         # Null shape; error in shapefile
-        if sfsp.shape[0] == 0:
-            raise Exception('Bad shapefile. No parts in shape.')
+        shp.validate()
 
         # Subset data matrix for clipping
-        xy_max = np.max(sfsp, axis=0)
-        xy_min = np.min(sfsp, axis=0)
-        clip_bool1 = np.logical_and(sparce_data[:, 0] > xy_min[0], sparce_data[:, 1] > xy_min[1])
-        clip_bool2 = np.logical_and(sparce_data[:, 0] < xy_max[0], sparce_data[:, 1] < xy_max[1])
+        clip_bool1 = np.logical_and(sparce_data[:, 0] > shp.xy_min[0], sparce_data[:, 1] > shp.xy_min[1])
+        clip_bool2 = np.logical_and(sparce_data[:, 0] < shp.xy_max[0], sparce_data[:, 1] < shp.xy_max[1])
         data_clip = sparce_data[np.logical_and(clip_bool1, clip_bool2), :]
 
         # No population in shape
         if data_clip.shape[0] == 0:
-            data_dict[shape_name] = 0
-            print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
+            data_dict[shp.name] = 0
+            print(k1 + 1, 'of', len(shapes), shp.name, data_dict[shp.name])
             continue
 
         # Track booleans (indicates if lat/long is interior)
         data_bool = np.zeros(data_clip.shape[0], dtype=bool)
-        prt_list = list(sf1s[k1].parts) + [len(sfsp)]
 
         # Iterate over parts of shapefile
-        for k2 in range(len(prt_list) - 1):
-            shp_prt = sfsp[prt_list[k2]:prt_list[k2 + 1]]
-            path_shp = plt.Path(shp_prt, closed=True, readonly=True)
-            area_prt = area_sphere(shp_prt)
-
+        for path_shp, area_prt in zip(shp.paths, shp.areas):
             # Union of positive areas; intersection with negative areas
             if area_prt > 0:
                 data_bool = np.logical_or(data_bool, path_shp.contains_points(data_clip[:, :2]))
@@ -105,8 +88,8 @@ def raster_clip(raster_file: Union[str, Path],
         # Record value to dict; print status
         value = data_clip[data_bool, 2]
         summary_func = summary_func or default_summary_func
-        data_dict[shape_name] = summary_func(value)
-        print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
+        data_dict[shp.name] = summary_func(value)
+        print(k1 + 1, 'of', len(shapes), shp.name, data_dict[shp.name])
 
     return data_dict
 
