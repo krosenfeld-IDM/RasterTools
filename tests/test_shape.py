@@ -1,9 +1,7 @@
-import geopandas as gpd
 import shutil
 import tempfile
 import unittest
 
-from rastertools import *
 from pathlib import Path
 
 

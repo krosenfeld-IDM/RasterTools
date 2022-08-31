@@ -1,3 +1,7 @@
+"""
+Functions for spatial processing of shape files.
+"""
+
 import numpy as np
 
 

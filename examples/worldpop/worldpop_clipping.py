@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Example showing how to use rastertools API to population data from WorldPop raster using shapes and selectors.
+"""
 
 import os
 

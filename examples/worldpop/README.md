@@ -1,18 +1,17 @@
-# Extracting Population from WorldPop Rasters using GADM Shapes 
-
+# Examples
+## Extracting Population from WorldPop 
 This example shows how to use `rastertools` package to extract population data from WorldPop raster files.
 
-To run:
-1. Make sure you have an [API token](https://dataexchange.gatesfoundation.org/pages/support-api-tokens#tokens) for the
-Gates Data Exchange placed in a `gdx.key` file in the repo main directory.
-2. Run the data generation scripts:
+### How to run
+1. Complete Setup steps from the main [README](../README.md)
+2. Run the data generation scripts:`
 
 ```bash
-python worldpop_clipping.py
-python worldpop_zonal_stats.py
+`python worldpop_clipping.py
 ```
-3. Run the comparison scripts:
-```bash
-python compare.py
-```
+
+### How it works
+Coming soon...
+
+
 

@@ -1,3 +1,7 @@
+"""
+Functions for spatial processing of raster TIFF files.
+"""
+
 import matplotlib.path as plt
 import numpy as np
 import shapefile
@@ -5,12 +9,22 @@ import shapefile
 from PIL import Image
 from PIL.TiffTags import TAGS
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Callable
 from rastertools.shape import area_sphere
 
 
-def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> Dict[str, Union[float, int]]:
-    """Extract data from a raster"""
+def raster_clip(raster_file: Union[str, Path],
+                shape_stem: Union[str, Path],
+                shape_attr: str = "DOTNAME",
+                summary_func: Callable = None) -> Dict[str, Union[float, int]]:
+    """
+    Extract data from a raster based on shapes.
+    :param raster_file: Local path to a raster file.
+    :param shape_stem: Local path stem referencing a set of shape files.
+    :param shape_attr: The shape attribute name to be use as output dictionary key.
+    :param summary_func: Aggregation func to be used for summarizing clipped data for each shape.
+    :return: Dictionary with dot names as keys and calculates aggregations as values.
+    """
     assert Path(raster_file).is_file(), "Raster file not found."
     # Raster data
     raster = Image.open(raster_file)
@@ -28,9 +42,12 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
     dx, dy = scale[0], -scale[1]
 
     # Make sure values are in range
-    assert (-180 < x0 < 180 or 0 < x0 < 360) and -85 < y0 < 85, "Tie point coordinates have invalid range."
-    assert -1 < dx < 1 and -1 < dy < 1, "Pixel scale has invalid range."
+    assert -180 < x0 < 180, "Tie point x coordinate (longitude) have invalid range."
+    assert -85 < y0 < 85, "Tie point y coordinate (latitude) have invalid range."
+    assert 0 < dx < 1, "Pixel dx scale has invalid range."
+    assert -1 < dy < 0, "Pixel dy scale has invalid range."
 
+    # Init sparce data matrix
     dat_mat = np.array(raster)
     xy_ints = np.argwhere(dat_mat > 0)
     sparce_data = np.zeros((xy_ints.shape[0], 3), dtype=float)
@@ -46,8 +63,8 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
     # Iterate of shapes in shapefile
     for k1 in range(len(sf1r)):
 
-        # First (only) field in shapefile record is dotname
-        shape_name = sf1r[k1][0]
+        # First (only) field in shapefile record is dot-name
+        shape_name = sf1r[k1][shape_attr]
 
         # Shapefile shape points
         sfsp = np.array(sf1s[k1].points)
@@ -86,12 +103,23 @@ def raster_clip(raster_file: Union[str, Path], shape_stem: Union[str, Path]) -> 
                 data_bool = np.logical_and(data_bool, np.logical_not(path_shp.contains_points(data_clip[:, :2])))
 
         # Record value to dict; print status
-        data_dict[shape_name] = int(np.round(np.sum(data_clip[data_bool, 2]), 0))
+        value = data_clip[data_bool, 2]
+        summary_func = summary_func or default_summary_func
+        data_dict[shape_name] = summary_func(value)
         print(k1 + 1, 'of', len(sf1r), shape_name, data_dict[shape_name])
 
     return data_dict
 
 
+def default_summary_func(v: np.ndarray):
+    return int(np.round(np.sum(v), 0))
+
+
 def get_tiff_tags(raster: Image) -> Dict[str, Any]:
-    # https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
+    """
+    Read tags from a TIFF file
+    https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
+    :param raster: TIFF object
+    :return: Dictionary of tag names and values.
+    """
     return {TAGS[t]: raster.tag[t] for t in dict(raster.tag)}

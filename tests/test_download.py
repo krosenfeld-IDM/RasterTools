@@ -18,7 +18,7 @@ class DownloadTests(unittest.TestCase):
         self.assertTrue(Path(file_path).is_file())
 
     def test_download_dataset(self):
-        file_paths = download("f009840c-d8d0-4acd-b928-200a0b36ba05", dataset=True, prefix="ewB", suffix=".csv", data_dir=str(self.test_dir), remote=self.gdx)
+        file_paths = download("f009840c-d8d0-4acd-b928-200a0b36ba05", is_dataset=True, prefix="ewB", suffix=".csv", data_dir=str(self.test_dir), remote=self.gdx)
         self.assertEquals(sorted(file_paths), sorted([str(f) for f in list(self.test_dir.glob("*.csv"))]))
         for f in file_paths:
             self.assertTrue(Path(f).is_file())
