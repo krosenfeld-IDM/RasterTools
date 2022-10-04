@@ -16,7 +16,8 @@ from rastertools.shape import ShapeView
 def raster_clip(raster_file: Union[str, Path],
                 shape_stem: Union[str, Path],
                 shape_attr: str = "DOTNAME",
-                summary_func: Callable = None) -> Dict[str, Union[float, int]]:
+                summary_func: Callable = None,
+                include_latlon: bool = False) -> Dict[str, Union[float, int]]:
     """
     Extract data from a raster based on shapes.
     :param raster_file: Local path to a raster file.
@@ -70,7 +71,10 @@ def raster_clip(raster_file: Union[str, Path],
 
         # No population in shape
         if data_clip.shape[0] == 0:
-            data_dict[shp.name] = 0
+            if include_latlon:
+                data_dict[shp.name] = {"lat": np.nan, "lon": np.nan, "pop": 0}
+            else:
+                data_dict[shp.name] = 0
             print(k1 + 1, 'of', len(shapes), shp.name, data_dict[shp.name])
             continue
 
@@ -88,7 +92,12 @@ def raster_clip(raster_file: Union[str, Path],
         # Record value to dict; print status
         value = data_clip[data_bool, 2]
         summary_func = summary_func or default_summary_func
-        data_dict[shp.name] = summary_func(value)
+        if include_latlon:
+            lon = np.mean(data_clip[data_bool, 0])
+            lat = np.mean(data_clip[data_bool, 1])
+            data_dict[shp.name] = {"lat": lat, "lon": lon, "pop": summary_func(value)}
+        else:
+            data_dict[shp.name] = summary_func(value)
         print(k1 + 1, 'of', len(shapes), shp.name, data_dict[shp.name])
 
     return data_dict

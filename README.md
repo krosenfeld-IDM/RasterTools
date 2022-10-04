@@ -36,3 +36,12 @@ pop_dict = raster_clip(raster_file, shape_file)
 ```
 
 See the complete code in the [WorldPop example](examples/worldpop/worldpop_clipping.py).  
+
+## Example
+See "examples" folder for more info on how to use this library.
+
+## Running Tests
+```bash
+pip install -r test_requirements.txt
+# TODO: how to run
+```

@@ -58,3 +58,7 @@ class ShapeTests(unittest.TestCase):
         parts = self.one_shape.shape.parts
         actual_area = area_sphere(self.one_shape.points[parts[0]:parts[1]])
         self.assertAlmostEqual(actual_area, 729.4676671307703, places=4)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -29,3 +29,7 @@ class RasterTests(unittest.TestCase):
         for k in actual_mean_pop:
             self.assertAlmostEqual(expected_mean_pop[k], actual_mean_pop[k], places=4)
             self.assertGreaterEqual(expected_sum_pop[k], int(actual_mean_pop[k]))
+
+
+if __name__ == '__main__':
+    unittest.main()

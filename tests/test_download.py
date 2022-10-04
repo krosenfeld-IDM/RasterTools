@@ -32,3 +32,7 @@ class DownloadTests(unittest.TestCase):
         self.assertEquals(sorted(file_paths), sorted([str(f) for f in list(self.test_dir.glob("*.csv"))]))
         for f in file_paths:
             self.assertTrue(Path(f).is_file())
+
+
+if __name__ == '__main__':
+    unittest.main()
