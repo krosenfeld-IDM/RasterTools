@@ -1,0 +1,2 @@
+emod_api==1.27.1
+emodpy-generic==0.0.16

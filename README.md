@@ -2,24 +2,25 @@
 Python package for processing raster (for example, extracting admin shape population from a raster file).    
 
 ## Setup  
-Clone or download this GitHub repo and `cd` to the repo root.  
+1. Clone or download this GitHub repo and `cd` to the repo root.  
 ```bash
 git clone git@github.com:InstituteforDiseaseModeling/RasterTools.git  
-cd RasterTools  
+cd RasterTools
 ```
   
-Create a Python virtual environment using the preferred tool (here we use Anaconda).    
+2. Create a Python virtual environment using the preferred tool (here we use Anaconda).    
   
 ```bash
-conda create --name  rastertools python=3.9 -c conda-forge  
+conda create --name rastertools python=3.9 --file requirements.txt  
 conda activate rastertools  
 ```
   
-Install the requirements and the package (here in dev mode).  
+3. Install this package in dev mode.  
 ```bash
-conda install --file requirements.txt -c conda-forge  
 pip install -e .   
 ```
+
+4. Obtain your GDx [API token](https://dataexchange.gatesfoundation.org/pages/support-api-tokens#tokens) and store it `CKAN_API_KEY` environment variable or `gdx.key` file (in repo root, ignored by git).
 
 ## Getting Started
 A typical `raster_clip` API usage scenario looks like this:  
@@ -35,3 +36,12 @@ pop_dict = raster_clip(raster_file, shape_file)
 ```
 
 See the complete code in the [WorldPop example](examples/worldpop/worldpop_clipping.py).  
+
+## Example
+See "examples" folder for more info on how to use this library.
+
+## Running Tests
+```bash
+pip install -r test_requirements.txt
+# TODO: how to run
+```

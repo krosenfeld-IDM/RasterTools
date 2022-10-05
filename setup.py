@@ -17,11 +17,9 @@ LONG_DESCRIPTION = """RasterTools project is a collection of simple tools for pr
 """
 
 INSTALL_REQUIRES = [
-    # "pandas >= 1.0.0",
-    # "shapely >= 1.7, < 2",
-    # "fiona >= 1.8",
-    # "pyproj >= 2.6.1.post1",
-    # "packaging",
+    # TODO: move dependencies from
+    # requirements.txt here if
+    # the package will be published
 ]
 
 # get all data dirs in the datasets module
@@ -40,7 +38,7 @@ data_files = []
 setup(
     name="rastertools",
     version="0.0.1",
-    description="Raster and sahpe tools",
+    description="Raster and shape tools",
     license="",
     author="RasterTools contributors",
     author_email="",
