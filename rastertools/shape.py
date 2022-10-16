@@ -21,6 +21,7 @@ class ShapeView:
         self.name_attr: str = name_attr or self.default_shape_attr
         self.shape: Shape = shape
         self.record: ShapeRecord = record
+        self.center: (float,float) = (0.0,0.0)
         self.paths: List[plt.Path] = []
         self.areas: List[float] = []
 
@@ -79,16 +80,31 @@ class ShapeView:
             # First (only) field in shapefile record is dot-name
             shp = cls(shape=sf1s[k1], record=sf1r[k1], name_attr=shape_attr)
 
-            # Track booleans (indicates if lat/long is interior)
+            # List of parts in (potentially) multi-part shape
             prt_list = list(shp.shape.parts) + [len(shp.points)]
+
+            # Accumulate total area centroid over multiple parts
+            Cx_tot = Cy_tot = Axy_tot = 0.0
+
             # Iterate over parts of shapefile
             for k2 in range(len(prt_list) - 1):
                 shp_prt = shp.points[prt_list[k2]:prt_list[k2 + 1]]
                 path_shp = plt.Path(shp_prt, closed=True, readonly=True)
+
+                # Estimate area for part
                 area_prt = area_sphere(shp_prt)
 
                 shp.paths.append(path_shp)
                 shp.areas.append(area_prt)
+
+                # Estimate area centroid for part, accumulate
+                (Cx,Cy,Axy) = centroid_area(shp_prt)
+                Cx_tot  += Cx*Axy
+                Cy_tot  += Cy*Axy
+                Axy_tot += Axy
+
+            # Update value for area centroid
+            shp.center = (Cx_tot/Axy_tot, Cy_tot/Axy_tot)
 
             shapes_data.append(shp)
 
@@ -111,3 +127,23 @@ def area_sphere(shape_points) -> float:
     tarea = 6371.0 * 6371.0 * np.sum(dalph)
 
     return tarea
+
+
+def centroid_area(shape_points) -> (float, float, float):
+    """
+    Calculates the area centroid of a polygon based on cartesean coordinates.
+    Area calculated by this function is not a good estimate for a spherical
+    polygon, and should only be used in weighting multi-part shape centroids.
+    :param shape_points: point (N,2) numpy array representing a shape
+                        (first == last point, clockwise == positive)
+    :return: (Cx, Cy, A) Coordinates and area as floats
+    """
+
+    a_vec = (shape_points[:-1,0]*shape_points[1: ,1]-
+             shape_points[1: ,0]*shape_points[:-1,1])
+
+    A  = np.sum(a_vec)/2.0
+    Cx = np.sum((shape_points[:-1,0]+shape_points[1:,0])*a_vec)/6.0/A
+    Cy = np.sum((shape_points[:-1,1]+shape_points[1:,1])*a_vec)/6.0/A
+
+    return (Cx, Cy, A)
