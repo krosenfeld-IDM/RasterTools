@@ -2,7 +2,9 @@ import unittest
 
 import numpy as np
 
-from rastertools import ShapeView, area_sphere
+from shapely.geometry import Polygon
+
+from rastertools import ShapeView, area_sphere, centroid_area
 from typing import Dict
 
 
@@ -53,11 +55,53 @@ class ShapeTests(unittest.TestCase):
         self.assertEqual(shp.points.shape[1], 2)
         self.assertTrue(np.array_equal(shp.points[0, :], shp.points[-1, :]))
 
+        # centroid
+        self.assertAlmostEqual(shp.center[0], 27.86319, places=4)
+        self.assertAlmostEqual(shp.center[1], -11.75417, places=4)
+
     def test_area_sphere(self):
         """Testing the function for calculating shape sphere area."""
         parts = self.one_shape.shape.parts
         actual_area = area_sphere(self.one_shape.points[parts[0]:parts[1]])
         self.assertAlmostEqual(actual_area, 729.4676671307703, places=4)
+
+    def test_centroid_area_all_shapes(self):
+        """Testing the function for calculating shape centroid."""
+        shapes = ShapeView.from_file(self.shape_file)
+
+        for shp in shapes:
+            prt_list = list(shp.shape.parts) + [len(shp.points)]
+            for i in range(len(prt_list) - 1):
+                # Skip a known edge case (see "test_centroid_area_edge_case")
+                if shp.name == "AFRO:DRCONGO:HAUT_KATANGA:KAMPEMBA" and i == 1:
+                    continue
+
+                points = shp.points[prt_list[i]:prt_list[i + 1]]
+                self.validate_centroid(points, places=4)
+
+    def test_centroid_area_edge_case(self):
+        points = np.array([
+            [27.67629337, - 11.57355617],
+            [27.67629332, - 11.57355617],
+            [27.6754073, -11.57303985],
+            [27.67629337, - 11.57355617]
+        ])
+
+        self.validate_centroid(points, places=2)  # fails for places=3 or higher
+
+    def validate_centroid(self, points, places=4):
+        """Compare centroid coordinates and area with shapley."""
+        # actual centroid
+        x1, y1, a1 = centroid_area(points)
+
+        # expected centroid (from Shapely)
+        p = Polygon(points)
+        c = p.centroid
+        x2, y2, a2 = c.xy[0][0], c.xy[1][0], p.area
+
+        self.assertAlmostEqual(x1, x2, places=places)
+        self.assertAlmostEqual(y1, y2, places=places)
+        self.assertAlmostEqual(abs(a1), a2, places=places)
 
 
 if __name__ == '__main__':

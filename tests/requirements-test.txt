@@ -1,2 +1,3 @@
 emod_api==1.27.1
 emodpy-generic==0.0.16
+shapely==1.8.4
