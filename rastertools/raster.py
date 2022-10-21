@@ -93,8 +93,8 @@ def raster_clip(raster_file: Union[str, Path],
         value = data_clip[data_bool, 2]
         summary_func = summary_func or default_summary_func
         if include_latlon:
-            lon = np.mean(data_clip[data_bool, 0])
-            lat = np.mean(data_clip[data_bool, 1])
+            lon = shp.center[0]
+            lat = shp.center[1]
             data_dict[shp.name] = {"lat": lat, "lon": lon, "pop": summary_func(value)}
         else:
             data_dict[shp.name] = summary_func(value)
