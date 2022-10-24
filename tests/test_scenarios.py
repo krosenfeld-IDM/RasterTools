@@ -41,15 +41,15 @@ class RasterTests(unittest.TestCase):
         pops = [n["NodeAttributes"]["InitialPopulation"] for n in nodes]
 
         # Test lat/lon/pop stats
-        lats_mean = round(np.mean([v for v in lats if not np.isnan(v)]), 2)
-        lons_mean = round(np.mean([v for v in lons if not np.isnan(v)]), 2)
-        pops_mean = round(np.mean([v for v in pops if not np.isnan(v)]))
+        lats_mean = np.mean([v for v in lats if not np.isnan(v)])
+        lons_mean = np.mean([v for v in lons if not np.isnan(v)])
+        pops_mean = np.mean([v for v in pops if not np.isnan(v)])
         nan_count = len([v for v in lats if np.isnan(v)])
 
-        self.assertTrue(lats_mean == -11.77)
-        self.assertTrue(lons_mean == 27.6)
-        self.assertTrue(pops_mean == 161781)
-        self.assertTrue(nan_count == 1)
+        self.assertAlmostEqual(lats_mean, -11.781644, places=4)
+        self.assertAlmostEqual(lons_mean, 27.614459, places=4)
+        self.assertAlmostEqual(pops_mean, 161781, places=0)
+        self.assertEqual(nan_count, 1)
 
 
 if __name__ == '__main__':

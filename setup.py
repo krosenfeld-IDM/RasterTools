@@ -6,7 +6,7 @@ import os
 import sys
 
 from pathlib import Path
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # ensure the current directory is on sys.path so versioneer can be imported
 # when pip uses PEP 517/518 build rules.
@@ -48,9 +48,7 @@ setup(
     },
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
-    packages=[
-        "rastertools"
-    ],
+    packages=find_packages(exclude=("tests",)),
     package_data={"rastertools": data_files},
     python_requires=">=3.8",
     install_requires=INSTALL_REQUIRES

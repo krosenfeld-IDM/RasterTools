@@ -101,7 +101,7 @@ def _get_cache_path(entity_id: str, is_dataset: bool) -> Path:
     :return: Cache file path object.
     """
     cache_dir = Path(user_cache_dir("rastertools"))                         # Get cache root dir.
-    cache_dir.mkdir(exist_ok=True)                                          # Make sure it exists.
+    cache_dir.mkdir(parents=True, exist_ok=True)                            # Make sure it exists.
     entity_type = "package" if is_dataset else "resource"                   # Determine subdir name.
     return cache_dir.joinpath(entity_type).joinpath(f"{entity_id}.json")    # Construct the path.
 
