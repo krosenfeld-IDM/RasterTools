@@ -3,9 +3,11 @@
 """
 
 import os
+import pkg_resources
 import sys
 
 from pathlib import Path
+from pkg_resources import parse_requirements
 from setuptools import setup, find_packages
 
 # ensure the current directory is on sys.path so versioneer can be imported
@@ -16,11 +18,13 @@ sys.path.append(str(Path(__file__).parent))
 LONG_DESCRIPTION = """RasterTools project is a collection of simple tools for processing raster files and shape files.
 """
 
-INSTALL_REQUIRES = [
-    # TODO: move dependencies from
-    # requirements.txt here if
-    # the package will be published
-]
+with Path('requirements.txt').open() as requirements_txt:
+    install_requires = [
+        str(requirement)
+        for requirement
+        in parse_requirements(requirements_txt)
+    ]
+
 
 # get all data dirs in the datasets module
 data_files = []
@@ -37,7 +41,7 @@ data_files = []
 
 setup(
     name="rastertools",
-    version="0.0.1",
+    version="0.2.0",
     description="Raster and shape tools",
     license="",
     author="RasterTools contributors",
@@ -49,7 +53,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
     packages=find_packages(exclude=("tests",)),
-    package_data={"rastertools": data_files},
+    #package_data={"rastertools": data_files},
     python_requires=">=3.8",
-    install_requires=INSTALL_REQUIRES
+    install_requires=install_requires
 )

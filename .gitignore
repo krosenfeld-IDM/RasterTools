@@ -22,6 +22,6 @@ results/
 .idea
 
 GDX.id
-gdx.key
+*gdx.key
 --*
 rastertools.egg-info/

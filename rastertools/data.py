@@ -6,7 +6,6 @@ meaning after data has been downloaded once access to GDx is no longer needed fo
 
 import os
 import requests
-import zipfile
 
 from appdirs import user_cache_dir
 from ckanapi import RemoteCKAN
@@ -25,7 +24,8 @@ def get_remote(key_file: Union[str, Path] = None) -> RemoteCKAN:
     if key_file is not None and Path(key_file).is_file():   # If key file is specified and exists.
         apikey = Path(key_file).read_text().strip()         # Read API token from the file.
     else:
-        apikey = os.getenv('CKAN_API_KEY').rstrip('\n')     # Otherwise, read it from the CKAN environment variable.
+        apikey = os.getenv('CKAN_API_KEY')                  # Otherwise, read it from the CKAN environment variable.
+        apikey = apikey.rstrip('\n') if apikey else apikey
 
     if apikey is None:
         raise ValueError("Unable to read GDX API key")

@@ -5,15 +5,13 @@ Helper functions used by other package modules.
 
 import hashlib
 import json
-import re
-import requests
 import zipfile
 
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Union
 
 
-def read_json(json_path: str) -> Dict[str, Any]:
+def read_json(json_path: Union[str, Path]) -> Dict[str, Any]:
     """
     Read a json file.
     :param json_path: Json file path.
@@ -26,7 +24,7 @@ def read_json(json_path: str) -> Dict[str, Any]:
     return data
 
 
-def save_json(data: Dict, json_path, sort_keys=False, indent=4) -> None:
+def save_json(data: Dict, json_path: Union[str, Path], sort_keys=False, indent=4) -> None:
     """
     Saving json object into a file.
     :param data: Json object.

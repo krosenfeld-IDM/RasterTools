@@ -11,11 +11,11 @@ cd RasterTools
 2. Create a Python virtual environment using the preferred tool (here we use Anaconda).    
   
 ```bash
-conda create --name rastertools python=3.9 --file requirements.txt  
+conda create --name rastertools python=3.9
 conda activate rastertools  
 ```
   
-3. Install this package in dev mode.  
+3. Install this package in dev mode (this also installs all the requirements).  
 ```bash
 pip install -e .   
 ```
@@ -41,7 +41,35 @@ See the complete code in the [WorldPop example](examples/worldpop/worldpop_clipp
 See "examples" folder for more info on how to use this library.
 
 ## Running Tests
+
+### Functional tests
+Install additional packages (like emod_api and shapely): 
 ```bash
-pip install -r test_requirements.txt
-# TODO: how to run
+# Install packages
+pip install -r requirements-test.txt
+```
+
+Run 'pytest' command:
+```bash
+# Run unit tests (recommended during development)
+pytest -m unit
+
+# Run test for a specific module, for example
+pytest tests/test_shape.py     # run shape unit tests
+pytest tests/test_download.py  # run GDx download tests
+
+# All tests (before a commit or merging a PR)
+pytest
+```
+
+### Tool-Comparison Tests
+To run tools comparison tests install additional packages:
+```bash
+# Install spatial tools packages (like rasterstats, geopandas)
+pip install -r requirements-tools.txt
+```
+Run 'pytest' command:
+```bash
+# Run compare tests
+pytest -m compare
 ```
