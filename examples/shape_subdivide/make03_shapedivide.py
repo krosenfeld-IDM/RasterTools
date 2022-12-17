@@ -1,6 +1,6 @@
 #*******************************************************************************
 
-import os, json, shapefile
+import os, shapefile
 
 import numpy              as np
 
