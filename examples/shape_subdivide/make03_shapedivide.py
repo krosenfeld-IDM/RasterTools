@@ -31,7 +31,7 @@ shp = download(data_id  = '23930ae4-cd30-41b8-b33d-278a09683bac',
                extract  = True)
 
 file_name   = '{:s}_LEV02_ZONES'.format(TLC)
-shape_path  = os.path.join(DATA_ROOT, '{:s}_lev02_zones'.format(TLC), file_name)
+shape_path  = os.path.join(DATA_ROOT, '{:s}_lev02_zones'.format(TLC).lower(), file_name)
 
 
 # Input shapefiles
@@ -113,9 +113,12 @@ for k1 in range(len(sf1r)):
   num_box    = np.maximum(int(np.round(tot_area/AREA_TARG)),1)
   pts_dim    = int(np.ceil(np.sqrt(PPB_DIM*num_box)))
 
+  if not mltigon.is_valid:
+    print(k1, 'Trying to fix the invalid Multipolygon.')
+    mltigon = mltigon.buffer(0)  # this seems to be fixing broken multi-polygons.
 
   # If the multipolygoin isn't valid; need to bail
-  if(!mltigon.is_valid):
+  if not mltigon.is_valid:
     print(k1, 'Multipolygon not valid')
     1/0
 
