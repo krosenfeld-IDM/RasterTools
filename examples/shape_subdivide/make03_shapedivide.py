@@ -10,7 +10,8 @@ from shapely.geometry import Polygon, MultiPolygon
 from sklearn.cluster  import KMeans
 from scipy.spatial    import Voronoi
 
-from rastertools  import  download, area_sphere
+from rastertools  import  download, area_sphere, get_remote
+from rastertools.shape  import *
 
 #*******************************************************************************
 # Quick, approximate  scaling for longitute ratio as a function of latitude
@@ -20,18 +21,22 @@ def long_mult(lat): # latitude in degrees
 
 #*******************************************************************************
 
+import time
+start_time = time.time()
 
-DATA_ROOT = os.path.join(os.environ['DATA_ROOT'],'GDx')
+
+DATA_ROOT = "datasets" # os.path.join(os.getenv('DATA_ROOT', "dataset"),'GDx')
 TLC       = 'COD'
 
 
 # GDX - Download DRC health zones shapefiles
 shp = download(data_id  = '23930ae4-cd30-41b8-b33d-278a09683bac',
                data_dir = DATA_ROOT,
-               extract  = True)
+               extract  = True,
+               remote=get_remote("../../gdx.key"))
 
 file_name   = '{:s}_LEV02_ZONES'.format(TLC)
-shape_path  = os.path.join(DATA_ROOT, '{:s}_lev02_zones'.format(TLC).lower(), file_name)
+shape_path  = os.path.join(DATA_ROOT, '{:s}_lev02_zones'.format(TLC.lower()), file_name)
 
 
 # Input shapefiles
@@ -41,7 +46,15 @@ sf1r   = sf1.records()
 
 
 # Output shapefile
-sf1new = shapefile.Writer(file_name + '_100km')
+file_name_new = Path("results2/expected").joinpath(file_name)
+Path(file_name_new).mkdir(exist_ok=True, parents=True)
+file_name_new = f"{file_name_new}_100km"
+file_name_new2 = f"{file_name_new}_centers_100km"
+
+sf1new = shapefile.Writer(file_name_new)
+sf1new2 = shapefile.Writer(file_name_new2, shapeType=shapefile.POINT)
+#sf1new2.field("ID", "N", 10)
+sf1new2.field('DOTNAME', 'C', 70, 0)
 
 # Output shapefile should get all the same fields as input shapefile. First field
 # in the list (index zero) is always an auto-added deletion flag for database purposes,
@@ -58,9 +71,11 @@ for k1 in range(1,len(sf1.fields)):
   else:
     sf1new.field(sf1.fields[k1][0],sf1.fields[k1][1],sf1.fields[k1][2])
 
+# DEJAN - MultiPolygon
+multi_polygons = shapes_to_polygons(sf1)
 
 # Iterate over every shape in the shapefile
-for k1 in range(len(sf1r)):
+for k1 in range(2): #len(sf1r)):
   dotname       = sf1r[k1][dotname_index]
   wrk_shape     = sf1s[k1]
   wrk_shape_pts = np.array(sf1s[k1].points)
@@ -100,6 +115,10 @@ for k1 in range(len(sf1r)):
       ply_list.append(Polygon(shp_prt[0], holes=shp_prt[1:]))
   mltigon = MultiPolygon(ply_list)
 
+  # DEJAN - compare multi-polygons flavors
+  mltign2 = multi_polygons[k1]   # --- DEJAN ---
+  assert mltigon == mltign2, "multi-polygons must be the same"
+
 
   # Second step is to create an underlying mesh of points. If the mesh is
   # equidistant, then the subdivided shapes will be uniform area. Alternatively,
@@ -110,7 +129,19 @@ for k1 in range(len(sf1r)):
   PPB_DIM    = 250  # Points-per-box-dimension; tuning; higher is slower and more accurate
   RND_SEED   = 4    # Random seed; ought to expose for reproducability
 
+  # DEJAN - area diff
+  tot_area2 = polygon_area_km2(mltign2)
+  area_diff = abs(tot_area - tot_area2)/tot_area
+  assert area_diff < 0.01
+
   num_box    = np.maximum(int(np.round(tot_area/AREA_TARG)),1)
+  num_box2 = np.maximum(int(np.round(tot_area2 / AREA_TARG)), 1)
+  are_num_box_diff = num_box != num_box2
+  if are_num_box_diff:
+    print(f"num_box differs: "
+          f"dotname: {dotname}, k1={k1}, num_box(x/a): [{num_box}, {num_box2}], "
+          f"center(a)={mltign2.centroid.x} {mltign2.centroid.y}")
+
   pts_dim    = int(np.ceil(np.sqrt(PPB_DIM*num_box)))
 
   if not mltigon.is_valid:
@@ -123,7 +154,7 @@ for k1 in range(len(sf1r)):
     1/0
 
   # Debug logging: shapefile index, target number of subdivisions
-  print(k1, num_box)
+  #print(k1, num_box)
 
   # Start with a rectangular mesh, then (roughly) correct longitude (x values);
   # Assume spacing on latitude (y values) is constant; x value spacing needs to
@@ -152,11 +183,30 @@ for k1 in range(len(sf1r)):
         part_bool = np.logical_and(part_bool,np.logical_not(path_shp.contains_points(pts_vec)))
     inBool = np.logical_or(inBool,part_bool)
 
+  # DEJAN - contains points
+  pts_vec_in1: np.ndarray = pts_vec[inBool, :]
+  pts_vec_in2: np.ndarray = polygon_contains(mltign2, pts_vec)
+
+  len1, len2 = pts_vec_in1.shape[0], pts_vec_in2.shape[0]
+  max_i = min(len1, len2)
+  pts_vec_diff = [t for t in  enumerate(pts_vec_in1[:max_i,:] - pts_vec_in2[:max_i,]) if sum(t[1]) != 0]
+  if len1 != len2 or len(pts_vec_diff) > 0:
+    last_few1 = pts_vec_in1[-3:, :]
+    last_few2 = pts_vec_in2[-3:, :]
+    print("points vectors differ")
+  # try:
+  #   assert np.array_equal(pts_vec_in1, pts_vec_in2), "Containing points must be the same"
+  #   #assert (pts_vec_in1 == pts_vec_in2).all(), "Containing points must be the same"
+  # except Exception as ex:
+  #
+  #   pass
 
   # Feed points interior to shape into k-means clustering to get num_box equal(-ish) clusters;
   sub_clust = KMeans(n_clusters=num_box, random_state=RND_SEED, n_init='auto').fit(pts_vec[inBool,:])
   sub_node  = sub_clust.cluster_centers_
 
+  points = [Point(xy) for xy in sub_node]
+  #save_points(points, filename="centers")
 
   # Don't actually want the cluster centers, goal is the outlines. Going from centers
   # to outlines uses Voronoi tessellation. Add a box of external points to avoid mucking
@@ -238,7 +288,13 @@ for k1 in range(len(sf1r)):
     sf1new.poly(poly_as_list)
     sf1new.record(*new_recs)
 
-
+    for i, p in enumerate([Point(xy) for xy in sub_node]):
+      sf1new2.point(p.x, p.y)
+      sf1new2.record(*new_recs)
 
 sf1new.close()
+sf1new2.close()
+
+dt = time.time() - start_time
+print(f"--- {int(dt//60)}m {dt%60}s ---")
 
