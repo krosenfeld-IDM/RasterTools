@@ -238,12 +238,27 @@ def long_mult(lat): # latitude in degrees
 
 
 def shape_subdivide(shape_stem: Union[str, Path],
-                    out_shape_stem: Union[str, Path] = None,
-                    out_centers: bool = False,
+                    out_shape_stem: Union[str, Path],
+                    out_has_centers: bool = False,
                     top_n: int = None,
-                    shape_attr: str = "DOTNAME") -> None:
+                    shape_attr: str = "DOTNAME",
+                    box_target_area_km2: int = 100,
+                    points_per_box: int = 250,
+                    random_seed: int = 4) -> None:
+    """
+    Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
+    :param shape_stem: Local path stem referencing a set of shape files.
+    :param out_shape_stem: Output shapefile stem. Default is shape_stem with "_sub" suffix.
+    :param out_has_centers: A flag controlling whether to export sub-shape centers. Default is False.
+    :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
+    :param shape_attr: The shape attribute used as an identity attribute in the output shapes. Default is "DOTNAME".
+    :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
+    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
+    :param random_seed: Random seed, expose for reproducibility.
+    :return: Nothing. The function generates shape files using out_shape_stem.
+    """
 
-    # Read shapes, convert to multi polygonsvor_list
+    # Read shapes
     sf1 = Reader(shape_stem)
     multi_list = shapes_to_polygons(sf1)
     rec_list = sf1.records()
@@ -256,10 +271,9 @@ def shape_subdivide(shape_stem: Union[str, Path],
     sf1new.field(shape_attr, 'C', 70, 0)
     sf1new.fields.extend([tuple(t) for t in sf1.fields if t[0] not in ["DeletionFlag", shape_attr]])
 
-    if out_centers:
+    if out_has_centers:
         sf1new2 = Writer(f"{out_shape_stem}_centers", shapeType=POINT)
         sf1new2.field(shape_attr, 'C', 70, 0)
-        #sf1new2.field("ID", "N", 10)
     else:
         sf1new2 = None
 
@@ -267,38 +281,28 @@ def shape_subdivide(shape_stem: Union[str, Path],
     assert shape_attr in field_names, f"Shape doesn't contain {shape_attr} field."
     dotname_index = field_names.index(shape_attr)
 
-
     # Second step is to create an underlying mesh of points. If the mesh is
     # equidistant, then the subdivided shapes will be uniform area. Alternatively,
     # the points could be population raster data, and the subdivided shapes would
     # be uniform population.
 
     top_n = top_n or len(multi_list)
-    # multi_count = len(multi_list)
-    # if top_n is not None:
-    #     assert isinstance(top_n, int) and top_n > 0, "Argument top_n must be a positive integer."
-    #     multi_count = abs(min(multi_count, top_n))
 
     for k1, multi in enumerate(multi_list[:top_n]):
-        AREA_TARG = 100  # Needs to be configurable; here target is ~100km^2
-        PPB_DIM = 250  # Points-per-box-dimension; tuning; higher is slower and more accurate
-        RND_SEED = 4    # Random seed; ought to expose for reproducibility
-
         multi_area = polygon_area_km2(multi)
-        num_box = np.maximum(int(np.round(multi_area/AREA_TARG)), 1)
-        pts_dim = int(np.ceil(np.sqrt(PPB_DIM*num_box)))
+        num_box = np.maximum(int(np.round(multi_area/box_target_area_km2)), 1)
+        pts_dim = int(np.ceil(np.sqrt(points_per_box*num_box)))
 
         if not multi.is_valid:
-            print(k1, f"Trying to fix the invalid Multipolygon {k1}.")
             multi = multi.buffer(0)  # this seems to be fixing broken multi-polygons.
-
-        # If the multi polygoin isn't valid; need to bail
-        if not multi.is_valid:
-            print(k1, f"Multipolygon {k1} not valid")
-            continue
+            if multi.is_valid:
+                print(k1, f"Fixed the invalid MultiPolygon {k1}.")
+            else:
+                print(k1, f"Unable to fix the MultiPolygon {k1}!")
         else:
             # Debug logging: shapefile index, target number of subdivisions
-            print(k1, num_box)
+            bounds_str = str([round(v, 2) for v in multi.bounds])
+            print(f"MultiPolygon: {k1:<5} {bounds_str:<32} Number of boxes: {num_box}")
 
         # Start with a rectangular mesh, then (roughly) correct longitude (x values);
         # Assume spacing on latitude (y values) is constant; x value spacing needs to
@@ -318,13 +322,14 @@ def shape_subdivide(shape_stem: Union[str, Path],
         pts_vec_in = polygon_contains(multi, pts_vec)
 
         # Feed points interior to shape into k-means clustering to get num_box equal(-ish) clusters;
-        sub_clust = KMeans(n_clusters=num_box, random_state=RND_SEED, n_init='auto').fit(pts_vec_in)
+        sub_clust = KMeans(n_clusters=num_box, random_state=random_seed, n_init='auto').fit(pts_vec_in)
         sub_node = sub_clust.cluster_centers_  # this is not a bug, that is the actual name of the property
 
         # Don't actually want the cluster centers, goal is the outlines. Going from centers
         # to outlines uses Voronoi tessellation. Add a box of external points to avoid mucking
         # up the edges. (+/- 200 was arbitrary value greater than any possible lat/long)
-        EXT_PTS = np.array([[-200, -200], [ 200, -200], [-200, 200], [200, 200]])
+        assert max(abs(sub_node.reshape(-1))) < 200, "Coordinates must be < 200."
+        EXT_PTS = np.array([[-200, -200], [200, -200], [-200, 200], [200, 200]])
         vor_node = np.append(sub_node, EXT_PTS, axis=0)
         vor_obj = Voronoi(vor_node)
 
@@ -347,6 +352,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
         # The Voronoi region outlines may extend beyond the shape outline and/or
         # overlap with negative spaces, so intersect each Voronoi region with the
         # shapely MultiPolygon created previously
+        new_recs = None
         for k2, poly in enumerate(vor_list):
             # Voronoi region are convex, so will not need MultiPolygon object
             poly_reg = (Polygon(poly)).intersection(multi)
@@ -365,14 +371,14 @@ def shape_subdivide(shape_stem: Union[str, Path],
             sf1new.poly(poly_as_list)
             sf1new.record(*new_recs)
 
-        if out_centers:
+        if out_has_centers and new_recs is not None:
             for i, p in enumerate([Point(xy) for xy in sub_node]):
                 sf1new2.point(p.x, p.y)
-                assert out_centers
+                assert out_has_centers
                 sf1new2.record(*new_recs)
 
     sf1new.close()
-    if out_centers:
+    if out_has_centers:
         sf1new2.close()
 
 
