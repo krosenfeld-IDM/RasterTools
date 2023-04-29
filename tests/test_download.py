@@ -4,7 +4,7 @@ import pytest
 
 from pathlib import Path
 
-from rastertools import download, get_remote
+from rastertools.data import download, get_remote
 from pytest_init import change_test_dir  # don't remove
 
 

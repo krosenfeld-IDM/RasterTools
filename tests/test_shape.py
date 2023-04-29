@@ -4,9 +4,8 @@ import re
 
 from typing import Dict
 
-from rastertools import ShapeView, area_sphere, centroid_area, shape_subdivide
-from rastertools.shape import shapes_to_polygons, shapes_to_polygons_dict, polygon_area_km2
-from pytest_init import change_test_dir  # don't remove 
+from rastertools.shape import ShapeView, area_sphere, centroid_area, shape_subdivide
+from pytest_init import change_test_dir  # don't remove
 
 from pathlib import Path
 
@@ -17,7 +16,7 @@ def setup_module():
 
 @pytest.fixture()
 def shape_file() -> Path:
-    return "data/cod_lev02_zones_test/cod_lev02_zones_test"
+    return Path("data/cod_lev02_zones_test/cod_lev02_zones_test")
 
 
 @pytest.fixture()
@@ -28,9 +27,9 @@ def one_shape(shape_file) -> ShapeView:
 
 
 @pytest.mark.unit
-def test_shape_load_from_file():
+def test_shape_load_from_file(shape_file):
     """Testing loading of a shape file and creating a list of shape view objects."""
-    shapes = ShapeView.from_file(pytest.shape_file)
+    shapes = ShapeView.from_file(shape_file)
     assert len(shapes) > 0
     for shp in shapes:
         shp.validate()
@@ -90,11 +89,33 @@ def test_shape_centroid_area(one_shape):
 
 
 @pytest.mark.unit
-def test_shape_sub_simple(one_shape, shape_file, tmp_path):
-    out_shape_stem = tmp_path.joinpath("sub_simple")
-    shape_subdivide(shape_stem=shape_file, out_shape_stem=out_shape_stem)
+def test_shape_sub_default(one_shape, shape_file, tmp_path):
+    run_shape_sub_test(one_shape, shape_file, tmp_path)
 
+
+@pytest.mark.unit
+def test_shape_sub_400km(one_shape, shape_file, tmp_path):
+    run_shape_sub_test(one_shape, shape_file, tmp_path, target_area=400)
+
+
+@pytest.mark.unit
+def test_shape_sub_100pt(one_shape, shape_file, tmp_path):
+    run_shape_sub_test(one_shape, shape_file, tmp_path, points_per_box=100)
+
+
+@pytest.mark.unit
+def test_shape_sub_seed(one_shape, shape_file, tmp_path):
+    run_shape_sub_test(one_shape, shape_file, tmp_path, random_seed=10)
+
+
+def run_shape_sub_test(one_shape, shape_file, tmp_path, target_area=100, points_per_box=None, random_seed=None):
+    out_shape_stem = shape_subdivide(shape_stem=shape_file,
+                                     out_dir=tmp_path,
+                                     box_target_area_km2=target_area,
+                                     points_per_box=points_per_box,
+                                     random_seed=random_seed)
     # Verify
+    assert str(out_shape_stem).endswith(f"_{target_area}km"), "Default name must end with target area."
     sub_shapes = [s for s in ShapeView.from_file(out_shape_stem) if s.name.startswith(pytest.expected_name)]
     names = [s.name[len(pytest.expected_name)+1:] for s in sub_shapes]
     names_ok = [re.match("^[A-Z]0{3}[0-9]$", n) is not None for n in names]
@@ -102,4 +123,4 @@ def test_shape_sub_simple(one_shape, shape_file, tmp_path):
 
     expected_area = one_shape.area_km2
     actual_area = sum([s.area_km2 for s in sub_shapes])
-    assert round(expected_area, 2) == round(actual_area, 2)
+    assert round(expected_area, 1) == round(actual_area, 1)

@@ -238,25 +238,37 @@ def long_mult(lat): # latitude in degrees
 
 
 def shape_subdivide(shape_stem: Union[str, Path],
-                    out_shape_stem: Union[str, Path],
-                    out_has_centers: bool = False,
+                    out_dir: Union[str, Path] = None,
+                    out_suffix: str = None,
+                    output_centers: bool = False,
                     top_n: int = None,
                     shape_attr: str = "DOTNAME",
-                    box_target_area_km2: int = 100,
-                    points_per_box: int = 250,
-                    random_seed: int = 4) -> None:
+                    box_target_area_km2: int = None,
+                    points_per_box: int = None,
+                    random_seed: int = None,
+                    verbose: bool = False) -> str:
     """
     Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
     :param shape_stem: Local path stem referencing a set of shape files.
-    :param out_shape_stem: Output shapefile stem. Default is shape_stem with "_sub" suffix.
-    :param out_has_centers: A flag controlling whether to export sub-shape centers. Default is False.
+    :param out_dir: Local dir where outputs are stored. Default is the same dir where shape_stem is.
+    :param out_suffix: Suffix of the output stem. Default is constructed from input parameters. 
+    :param output_centers: A flag controlling whether to export sub-shape centers. Default is False.
     :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
     :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
     :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
-    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
+    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate. 
     :param random_seed: Random seed, expose for reproducibility.
-    :return: Nothing. The function generates shape files using out_shape_stem.
+    :param verbose: Show debug info.
+    :return: Local path prefix (out shapes stem).
     """
+
+    box_target_area_km2 = box_target_area_km2 or 100
+    points_per_box = points_per_box or 250
+    random_seed = random_seed or 4
+
+    assert box_target_area_km2 > 0, "Argument 'box_target_area_km2' must be a positive integer."
+    assert points_per_box > 0, "Argument 'points_per_box' must be a positive integer."
+    assert random_seed > 0, "Argument 'random_seed' must be a positive integer."
 
     # Read shapes
     sf1 = Reader(shape_stem)
@@ -264,14 +276,17 @@ def shape_subdivide(shape_stem: Union[str, Path],
     rec_list = sf1.records()
 
     # Create shape writer
-    out_shape_stem = out_shape_stem or f"{str(shape_stem)}_sub"
-    out_shape_stem = Path(out_shape_stem)
+    out_dir = Path(out_dir or Path(shape_stem.parent))
+    out_suffix = out_suffix or f"sub_{box_target_area_km2}km"
+    out_shape_name = f"{Path(shape_stem).name}_{out_suffix}"
+    out_shape_stem = Path(out_dir.joinpath(out_shape_name))
+
     out_shape_stem.parent.mkdir(exist_ok=True, parents=True)
     sf1new = Writer(out_shape_stem)
     sf1new.field(shape_attr, 'C', 70, 0)
     sf1new.fields.extend([tuple(t) for t in sf1.fields if t[0] not in ["DeletionFlag", shape_attr]])
 
-    if out_has_centers:
+    if output_centers:
         sf1new2 = Writer(f"{out_shape_stem}_centers", shapeType=POINT)
         sf1new2.field(shape_attr, 'C', 70, 0)
     else:
@@ -295,14 +310,16 @@ def shape_subdivide(shape_stem: Union[str, Path],
 
         if not multi.is_valid:
             multi = multi.buffer(0)  # this seems to be fixing broken multi-polygons.
-            if multi.is_valid:
-                print(k1, f"Fixed the invalid MultiPolygon {k1}.")
-            else:
-                print(k1, f"Unable to fix the MultiPolygon {k1}!")
-        else:
+            if verbose and multi.is_valid:
+                    print(f"Fixed the invalid MultiPolygon {k1}.")
+
+        if multi.is_valid:
             # Debug logging: shapefile index, target number of subdivisions
             bounds_str = str([round(v, 2) for v in multi.bounds])
-            print(f"MultiPolygon: {k1:<5} {bounds_str:<32} Number of boxes: {num_box}")
+            if verbose:
+                print(f"MultiPolygon: {k1:<5} {bounds_str:<32} Number of boxes: {num_box}")
+        else:
+            Warning(f"Unable to fix the MultiPolygon {k1}!")
 
         # Start with a rectangular mesh, then (roughly) correct longitude (x values);
         # Assume spacing on latitude (y values) is constant; x value spacing needs to
@@ -346,8 +363,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
         # If there's not 1 Voronoi region outline for each k-means cluster center
         # at this point, something has gone very wrong. Time to bail.
         if len(vor_list) != len(sub_node):
-            print(k1, 'BLARG')
-            continue
+            raise ValueError("Failed to create a Voronoi region outline for each k-means cluster center.")
 
         # The Voronoi region outlines may extend beyond the shape outline and/or
         # overlap with negative spaces, so intersect each Voronoi region with the
@@ -371,15 +387,17 @@ def shape_subdivide(shape_stem: Union[str, Path],
             sf1new.poly(poly_as_list)
             sf1new.record(*new_recs)
 
-        if out_has_centers and new_recs is not None:
+        if output_centers and new_recs is not None:
             for i, p in enumerate([Point(xy) for xy in sub_node]):
                 sf1new2.point(p.x, p.y)
-                assert out_has_centers
+                assert output_centers
                 sf1new2.record(*new_recs)
 
     sf1new.close()
-    if out_has_centers:
+    if output_centers:
         sf1new2.close()
+
+    return str(out_shape_stem)
 
 
 def plot_shapes(shape_stem: Union[str, Path],
@@ -409,3 +427,15 @@ def plot_shapes(shape_stem: Union[str, Path],
     ax.set_ylim(y_min, y_max)
 
     return fig, ax
+
+
+# Plot generated shapes into a file
+def plot_subdivision(shape_file: Union[str, Path],
+                     subdivision_stam: Union[str, Path],
+                     shape_color="gray",
+                     subdivision_color: str = "red",
+                     png_dpi=1800):
+    png_file = Path(subdivision_stam).with_suffix(".png")
+    fig, ax = plot_shapes(shape_file, color=shape_color, alpha=0.5, line_width=1.0)
+    plot_shapes(subdivision_stam, ax=ax, color=subdivision_color, alpha=0.3, line_width=0.2)
+    fig.savefig(png_file, dpi=png_dpi)

@@ -8,7 +8,7 @@ with suppress(ImportError): from shapely.geometry import Polygon
 with suppress(ImportError): from pyproj import Geod
 
 
-from rastertools import ShapeView, area_sphere, centroid_area
+from rastertools.shape import ShapeView, area_sphere, centroid_area
 from pytest_init import change_test_dir  # don't remove 
 
 
