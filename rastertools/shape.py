@@ -251,7 +251,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
     :param out_shape_stem: Output shapefile stem. Default is shape_stem with "_sub" suffix.
     :param out_has_centers: A flag controlling whether to export sub-shape centers. Default is False.
     :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
-    :param shape_attr: The shape attribute used as an identity attribute in the output shapes. Default is "DOTNAME".
+    :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
     :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
     :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
     :param random_seed: Random seed, expose for reproducibility.

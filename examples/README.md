@@ -30,12 +30,27 @@ You can see the code for this in [tests/test_scenarios.py](../tests/test_scenari
 ## Creating Subdivision Layer
 This example shows how to use the `shape_subdivide` function to create a subdivision layer.
 
-To run this example execute:`
+To run this example execute:
 
 ```bash
-`python worldpop_clipping.py  
+python worldpop_clipping.py  
 ```
-The example will generate subdivision shapes (Voronoi polygons) and their visualization (see `results/COD_LEV02_ZONES_100km.png` image).  
 
-To explore subdivision shapes you can also use QGIS:  
-<img src="../docs/images/subdivision.png" width="400">
+The `shape_subdivide` function exposes three parameters you can use to tailor the subdivision layer:
+- `box_target_area_km2`: used to calculate the number of boxes (clusters) 
+- `points_per_box`: higher is slower and more accurate.   
+- `random_seed`: random seed 
+
+For example, this QGIS visualization show subdivision shapes for two values of `box_target_area_km2`:   
+
+<table>
+<tr>
+<td>100 km2 (default)</td>
+<td>200 km2</td>
+</tr>
+<tr>
+<td><img src="../docs/images/subdivision_100km2.png" width="400"></td> 
+<td><img src="../docs/images/subdivision_200km2.png" width="400"></td>
+</tr></table>
+
+If you don't have QGIS installed, the example plots generated subdivision layers (see `results/COD_LEV02_ZONES_100km.png` image).
