@@ -88,34 +88,47 @@ def test_shape_centroid_area(one_shape):
     assert round(abs(a1), 4) == 0.0603
 
 
+# Subdivision Tests
+
+
 @pytest.mark.unit
-def test_shape_sub_default(one_shape, shape_file, tmp_path):
+def test_shape_sub_default(one_shape, shape_file):
+    run_shape_sub_test(one_shape, shape_file)
+
+
+@pytest.mark.unit
+def test_shape_sub_shp(one_shape, shape_file):
+    run_shape_sub_test(one_shape, shape_file.with_suffix(".shp"))
+
+
+@pytest.mark.unit
+def test_shape_sub_temp_dir(one_shape, shape_file, tmp_path):
     run_shape_sub_test(one_shape, shape_file, tmp_path)
 
 
 @pytest.mark.unit
-def test_shape_sub_400km(one_shape, shape_file, tmp_path):
-    run_shape_sub_test(one_shape, shape_file, tmp_path, target_area=400)
+def test_shape_sub_400km(one_shape, shape_file):
+    run_shape_sub_test(one_shape, shape_file, target_area=400)
 
 
 @pytest.mark.unit
-def test_shape_sub_100pt(one_shape, shape_file, tmp_path):
-    run_shape_sub_test(one_shape, shape_file, tmp_path, points_per_box=100)
+def test_shape_sub_120pt(one_shape, shape_file):
+    run_shape_sub_test(one_shape, shape_file, points_per_box=120)
 
 
 @pytest.mark.unit
-def test_shape_sub_seed(one_shape, shape_file, tmp_path):
-    run_shape_sub_test(one_shape, shape_file, tmp_path, random_seed=10)
+def test_shape_sub_seed(one_shape, shape_file):
+    run_shape_sub_test(one_shape, shape_file, random_seed=10)
 
 
-def run_shape_sub_test(one_shape, shape_file, tmp_path, target_area=100, points_per_box=None, random_seed=None):
+def run_shape_sub_test(one_shape, shape_file, tmp_path=None, target_area=None, points_per_box=None, random_seed=None):
     out_shape_stem = shape_subdivide(shape_stem=shape_file,
                                      out_dir=tmp_path,
                                      box_target_area_km2=target_area,
                                      points_per_box=points_per_box,
                                      random_seed=random_seed)
     # Verify
-    assert str(out_shape_stem).endswith(f"_{target_area}km"), "Default name must end with target area."
+    assert str(out_shape_stem).endswith(f"_{target_area or 100}km"), "Default name must end with target area."
     sub_shapes = [s for s in ShapeView.from_file(out_shape_stem) if s.name.startswith(pytest.expected_name)]
     names = [s.name[len(pytest.expected_name)+1:] for s in sub_shapes]
     names_ok = [re.match("^[A-Z]0{3}[0-9]$", n) is not None for n in names]

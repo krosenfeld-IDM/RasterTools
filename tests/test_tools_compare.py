@@ -124,6 +124,6 @@ def validate_centroid(points, places=4):
 # raster clip functions vs. rasterstats
 
 
-@pytest.mark.skipif('rasterstats' not in sys.modules, reason="requires the 'rasterstats' library")
-def test_raster_clip_vs_zonal_stats():
-    pass
+# @pytest.mark.skipif('rasterstats' not in sys.modules, reason="requires the 'rasterstats' library")
+# def test_raster_clip_vs_zonal_stats():
+#     pass
