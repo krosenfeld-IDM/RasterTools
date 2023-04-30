@@ -41,7 +41,7 @@ data_files = []
 
 setup(
     name="rastertools",
-    version="0.2.0",
+    version="0.3.0",
     description="Raster and shape tools",
     license="",
     author="RasterTools contributors",

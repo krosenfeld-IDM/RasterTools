@@ -13,7 +13,7 @@ with suppress(ImportError):
     from emod_api.demographics import Demographics as demographics
     from emod_api.demographics.Demographics import Demographics, Node
 
-from rastertools import raster_clip, utils
+from rastertools import raster_clip
 from pytest_init import change_test_dir  # don't remove 
 
 

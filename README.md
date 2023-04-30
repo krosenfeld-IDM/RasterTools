@@ -37,8 +37,18 @@ pop_dict = raster_clip(raster_file, shape_file)
 
 See the complete code in the [WorldPop example](examples/worldpop/worldpop_clipping.py).  
 
-## Example
-See "examples" folder for more info on how to use this library.
+A typical `shape_subdivide` API usage scenario looks like this:  
+```python
+from rastertools import download, shape_subdivide
+
+# Download data form GDX
+shape_file = download(data_id= "...shapefiles id...")
+
+# Create shape subdivision layer
+subdiv_stem = shape_subdivide(shape_stem=shape_file)
+```
+
+See the complete code in the [Shape Subdivision example](examples/shape_subdivide/shape_subdivision.py).
 
 ## Running Tests
 
@@ -52,14 +62,14 @@ pip install -r requirements-test.txt
 Run 'pytest' command:
 ```bash
 # Run unit tests (recommended during development)
-pytest -m unit
+pytest -m unit -v
 
 # Run test for a specific module, for example
-pytest tests/test_shape.py     # run shape unit tests
-pytest tests/test_download.py  # run GDx download tests
+pytest tests/test_shape.py -v     # run shape unit tests
+pytest tests/test_download.py -v  # run GDx download tests
 
 # All tests (before a commit or merging a PR)
-pytest
+pytest -v
 ```
 
 ### Tool-Comparison Tests
@@ -71,5 +81,5 @@ pip install -r requirements-tools.txt
 Run 'pytest' command:
 ```bash
 # Run compare tests
-pytest -m compare
+pytest -m compare -v
 ```
