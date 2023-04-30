@@ -17,9 +17,8 @@ os.environ['CKAN_API_KEY'] = Path("../../gdx.key").read_text()                  
 shp: List[str] = download("23930ae4-cd30-41b8-b33d-278a09683bac", extract=True)  # DRC health zones shapefiles
 
 # Shape file paths
-shape_file = Path(shp[0])
-shape_file = shape_file.parent.joinpath(shape_file.stem)
-out_dir = "results"
+shape_file = Path(shp[0])  # Shape file path
+out_dir = "results"        # output dir
 
 
 def subdivide_example(area: int = None):

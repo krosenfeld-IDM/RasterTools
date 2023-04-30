@@ -9,6 +9,7 @@ import matplotlib.path as plth
 import matplotlib.pyplot as plt
 import numpy as np
 import shapely.geometry
+import tempfile
 
 from pathlib import Path
 from pyproj import Geod
@@ -249,9 +250,9 @@ def shape_subdivide(shape_stem: Union[str, Path],
                     verbose: bool = False) -> str:
     """
     Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
-    :param shape_stem: Local path stem referencing a set of shape files.
-    :param out_dir: Local dir where outputs are stored. Default is the same dir where shape_stem is.
-    :param out_suffix: Suffix of the output stem. Default is constructed from input parameters. 
+    :param shape_stem: Local shape file path or stem (path without extension).
+    :param out_dir: Local dir where outputs are stored. Default is a new temp dir.
+    :param out_suffix: Suffix of the output stem. Default is a suffix containing box_target_area_km2.
     :param output_centers: A flag controlling whether to export sub-shape centers. Default is False.
     :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
     :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
@@ -261,6 +262,10 @@ def shape_subdivide(shape_stem: Union[str, Path],
     :param verbose: Show debug info.
     :return: Local path prefix (out shapes stem).
     """
+
+    shape_stem = Path(shape_stem)
+    if shape_stem.suffix != "":
+        shape_stem = shape_stem.with_suffix("")
 
     box_target_area_km2 = box_target_area_km2 or 100
     points_per_box = points_per_box or 250
@@ -276,7 +281,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
     rec_list = sf1.records()
 
     # Create shape writer
-    out_dir = Path(out_dir or Path(shape_stem.parent))
+    out_dir = Path(out_dir or Path(tempfile.mkdtemp()))
     out_suffix = out_suffix or f"sub_{box_target_area_km2}km"
     out_shape_name = f"{Path(shape_stem).name}_{out_suffix}"
     out_shape_stem = Path(out_dir.joinpath(out_shape_name))
