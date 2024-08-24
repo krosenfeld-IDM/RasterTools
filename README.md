@@ -53,7 +53,7 @@ See the complete code in the [Shape Subdivision example](examples/shape_subdivid
 ## Running Tests
 
 ### Functional tests
-Install additional packages (like emod_api and shapely): 
+Install additional packages (like pytest): 
 ```bash
 # Install packages
 pip install -r requirements-test.txt
@@ -70,16 +70,4 @@ pytest tests/test_download.py -v  # run GDx download tests
 
 # All tests (before a commit or merging a PR)
 pytest -v
-```
-
-### Tool-Comparison Tests
-To run tools comparison tests install additional packages:
-```bash
-# Install spatial tools packages (like rasterstats, geopandas)
-pip install -r requirements-tools.txt
-```
-Run 'pytest' command:
-```bash
-# Run compare tests
-pytest -m compare -v
 ```
