@@ -47,7 +47,7 @@ def raster_clip(raster_file: Union[str, Path],
         data_clip = subset_matrix_for_clipping(shp, sparce_data)
 
         if data_clip.shape[0] == 0:
-            data_dict[shp.name] = summary_entry(None, {"pop": 0}, include_latlon)
+            data_dict[shp.name] = summary_entry(shp, {"pop": 0}, include_latlon)
             print_status(shp, data_dict, k1, len(shapes))
             continue
 
