@@ -1,5 +1,0 @@
-https://data.worldpop.org/GIS/Population/Global_2000_2020/2018/MWI/mwi_ppp_2018.tif
-https://data.worldpop.org/GIS/Population/Global_2000_2020/2019/MWI/mwi_ppp_2019.tif
-https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/MWI/mwi_ppp_2020.tif
-
-https://download.lfd.uci.edu/pythonlibs/archived/GDAL-3.4.3-pp38-pypy38_pp73-win_amd64.whl
