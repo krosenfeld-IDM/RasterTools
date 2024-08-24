@@ -23,6 +23,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install -r tests/requirements-test.txt --index-url=https://packages.idmod.org/api/pypi/pypi-production/simple
-          pip install -r tests/requirements-tools.txt
       - name: Run unit-tests
         run: pytest -m unit -v

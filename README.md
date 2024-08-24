@@ -20,16 +20,10 @@ conda activate rastertools
 pip install -e .   
 ```
 
-4. Obtain your GDx [API token](https://dataexchange.gatesfoundation.org/pages/support-api-tokens#tokens) and store it `CKAN_API_KEY` environment variable or `gdx.key` file (in repo root, ignored by git).
-
 ## Getting Started
 A typical `raster_clip` API usage scenario looks like this:  
 ```python
-from rastertools import download, raster_clip  
-
-# Download data form GDX  
-shape_file = download(data_id= "...shapefiles id...")   
-raster_file = download(data_id= "...raster files...")  
+from rastertools import raster_clip
 
 # Clipping raster with shapes  
 pop_dict = raster_clip(raster_file, shape_file)  
@@ -39,10 +33,7 @@ See the complete code in the [WorldPop example](examples/worldpop/worldpop_clipp
 
 A typical `shape_subdivide` API usage scenario looks like this:  
 ```python
-from rastertools import download, shape_subdivide
-
-# Download data form GDX
-shape_file = download(data_id= "...shapefiles id...")
+from rastertools import shape_subdivide
 
 # Create shape subdivision layer
 subdiv_stem = shape_subdivide(shape_stem=shape_file)
@@ -53,7 +44,7 @@ See the complete code in the [Shape Subdivision example](examples/shape_subdivid
 ## Running Tests
 
 ### Functional tests
-Install additional packages (like emod_api and shapely): 
+Install additional packages (like pytest): 
 ```bash
 # Install packages
 pip install -r requirements-test.txt
@@ -70,16 +61,4 @@ pytest tests/test_download.py -v  # run GDx download tests
 
 # All tests (before a commit or merging a PR)
 pytest -v
-```
-
-### Tool-Comparison Tests
-To run tools comparison tests install additional packages:
-```bash
-# Install spatial tools packages (like rasterstats, geopandas)
-pip install -r requirements-tools.txt
-```
-Run 'pytest' command:
-```bash
-# Run compare tests
-pytest -m compare -v
 ```

@@ -1,27 +1,25 @@
 # User-specific files
 
+*.csv
+*.dbf
+*.id
 *.log
-
 *.png
+*.shp
+*.shx
 *.svg
 *.tif
-
-*.shp
-*.dbf
-*.shx
-
 *.zip
 
-*.id
-
 __pycache__/
-
-data*/
+build/
+dist/
+rastertools.egg-info/
 results/
-*.csv
-.idea
 
+.idea
 GDX.id
 *gdx.key
 --*
-rastertools.egg-info/
+
+!examples/data/*

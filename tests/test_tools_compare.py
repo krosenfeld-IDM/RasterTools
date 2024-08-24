@@ -2,14 +2,11 @@ import numpy as np
 import pytest
 import sys
 
-from contextlib import suppress  # let pytest skip unsupported tests
-with suppress(ImportError): from rasterstats import zonal_stats
-with suppress(ImportError): from shapely.geometry import Polygon
-with suppress(ImportError): from pyproj import Geod
-
+from shapely.geometry import Polygon
+from pyproj import Geod
 
 from rastertools.shape import ShapeView, area_sphere, centroid_area
-from pytest_init import change_test_dir  # don't remove 
+from pytest_init import change_test_dir  # don't remove
 
 
 def setup_function() -> None:
@@ -18,9 +15,9 @@ def setup_function() -> None:
 
 
 # Sphere area function vs. pyproj
-
-
 sphere_area_diff_perc = 0.005
+
+
 @pytest.mark.unit
 @pytest.mark.skipif('pyproj' not in sys.modules, reason="requires the 'pyproj' library")
 def test_area_sphere_vs_pyproj_simple():
@@ -119,11 +116,3 @@ def validate_centroid(points, places=4):
     assert round(x1, places) == round(x2, places)
     assert round(y1, places) == round(y2, places)
     assert round(abs(a1), places) == round(a2, places)
-
-
-# raster clip functions vs. rasterstats
-
-
-# @pytest.mark.skipif('rasterstats' not in sys.modules, reason="requires the 'rasterstats' library")
-# def test_raster_clip_vs_zonal_stats():
-#     pass
