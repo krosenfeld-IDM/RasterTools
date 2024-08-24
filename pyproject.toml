@@ -1,0 +1,26 @@
+[project]
+name="rastertools"
+version="0.3.0"
+description="Raster and shape tools"
+license = {file = "LICENSE"}
+authors=[
+    { name="Example Author", email="example@idmod.org" }
+]
+readme="README.md"
+requires-python=">=3.9"
+dependencies=[
+    "appdirs~=1.4",
+    "ckanapi~=4.8",
+    "matplotlib~=3.9",
+    "requests~=2.32",
+    "pyshp~=2.3",
+    "pyproj~=3.6",
+    "scikit-learn~=1.5",
+    "shapely~=2.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/InstituteforDiseaseModeling/RasterTools"
+
+[build-system]
+requires = ["setuptools"]
