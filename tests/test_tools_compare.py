@@ -2,10 +2,8 @@ import numpy as np
 import pytest
 import sys
 
-from contextlib import suppress  # let pytest skip unsupported tests
-with suppress(ImportError): from shapely.geometry import Polygon
-with suppress(ImportError): from pyproj import Geod
-
+from shapely.geometry import Polygon
+from pyproj import Geod
 
 from rastertools.shape import ShapeView, area_sphere, centroid_area
 from pytest_init import change_test_dir  # don't remove
