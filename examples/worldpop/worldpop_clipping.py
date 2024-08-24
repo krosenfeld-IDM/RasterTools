@@ -31,8 +31,3 @@ pop_dict2: Dict = raster_clip(raster_file, shape_file, include_latlon=True)
 df = pd.DataFrame.from_dict(pop_dict2, orient="index")
 df = df.reset_index(names=["dot_name"])
 df.to_csv("results/clipped_pop.csv", index=False)
-
-# To generate EMOD demographics you can use emod_api Demographics object
-# dmg: Demographics = Demographics.from_csv(pop_csv)
-
-
