@@ -19,7 +19,7 @@ from shapely.prepared import prep
 from sklearn.cluster import KMeans
 from scipy.spatial import Voronoi
 
-from typing import Any, Dict, List, Tuple, Union, Callable
+from typing import List, Tuple, Union
 
 
 class ShapeView:
@@ -29,6 +29,7 @@ class ShapeView:
     def __init__(self, shape: Shape, record: ShapeRecord, name_attr: str = None):
         self.name_attr: str = name_attr or self.default_shape_attr
         self.shape: Shape = shape
+        self._points: np.ndarray = None
         self.record: ShapeRecord = record
         self.center: (float, float) = (0.0, 0.0)
         self.paths: List[plth.Path] = []
@@ -46,7 +47,9 @@ class ShapeView:
     @property
     def points(self):
         """The list of point defining shape geometry."""
-        return np.array(self.shape.points)
+        if self._points is None:
+            self._points = np.array(self.shape.points)
+        return self._points
 
     @property
     def xy_max(self):
@@ -158,7 +161,7 @@ def shapes_to_polygons(shape_stem: Union[str, Path, Reader], all_multi: bool = T
 
 
 def polygon_contains(polygon: Union[Polygon, MultiPolygon],
-                            points: Union[np.ndarray, List[Point]]) -> np.ndarray:
+                     points: Union[np.ndarray, List[Point]]) -> np.ndarray:
     mp = prep(polygon)  # prep
     pts: List[Point] = [Point(t[0], t[1]) for t in points] if isinstance(points, np.ndarray) else points
     pts_in = [p for p in pts if mp.contains(p)]
@@ -231,8 +234,8 @@ def centroid_area(shape_points) -> (float, float, float):
     return (Cx, Cy, A)
 
 
-def long_mult(lat): # latitude in degrees
-  return 1.0/np.cos(lat*np.pi/180.0)
+def long_mult(lat):  # latitude in degrees
+    return 1.0/np.cos(lat*np.pi/180.0)
 
 
 # API
@@ -257,7 +260,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
     :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
     :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
     :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
-    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate. 
+    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
     :param random_seed: Random seed, expose for reproducibility.
     :param verbose: Show debug info.
     :return: Local path prefix (out shapes stem).
@@ -316,7 +319,7 @@ def shape_subdivide(shape_stem: Union[str, Path],
         if not multi.is_valid:
             multi = multi.buffer(0)  # this seems to be fixing broken multi-polygons.
             if verbose and multi.is_valid:
-                    print(f"Fixed the invalid MultiPolygon {k1}.")
+                print(f"Fixed the invalid MultiPolygon {k1}.")
 
         if multi.is_valid:
             # Debug logging: shapefile index, target number of subdivisions
