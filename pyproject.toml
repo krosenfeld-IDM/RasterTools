@@ -1,14 +1,17 @@
 [project]
-name="rastertools"
+name = "rastertools"
 dynamic = ["version"]
-description="Raster and shape tools"
-license = {file = "LICENSE"}
-authors=[
+description = "Raster and shape tools"
+license = "MIT"
+license-files = [
+    "LICENSE",
+]
+authors = [
     { name="Kurt Frey", email="kfrey@idmod.org" }
 ]
-readme="README.md"
-requires-python=">=3.9"
-dependencies=[
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
     "matplotlib~=3.9",
     "pyshp~=2.3",
     "pyproj~=3.6",
