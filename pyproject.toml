@@ -1,6 +1,6 @@
 [project]
 name="rastertools"
-version="0.3.0"
+dynamic = ["version"]
 description="Raster and shape tools"
 license = {file = "LICENSE"}
 authors=[
@@ -20,4 +20,7 @@ dependencies=[
 Homepage = "https://github.com/InstituteforDiseaseModeling/RasterTools"
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools-scm"]
+
+[tool.setuptools.dynamic]
+version = {attr = "starsim.version.__version__"}
