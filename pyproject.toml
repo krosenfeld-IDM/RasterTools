@@ -23,4 +23,4 @@ Homepage = "https://github.com/InstituteforDiseaseModeling/RasterTools"
 requires = ["setuptools", "setuptools-scm"]
 
 [tool.setuptools.dynamic]
-version = {attr = "starsim.version.__version__"}
+version = {attr = "rastertools.version.__version__"}
