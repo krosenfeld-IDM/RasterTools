@@ -2,10 +2,7 @@
 name = "rastertools"
 dynamic = ["version"]
 description = "Raster and shape tools"
-license = "MIT"
-license-files = [
-    "LICENSE",
-]
+license = {file = "LICENSE"}
 authors = [
     { name="Kurt Frey", email="kfrey@idmod.org" }
 ]
