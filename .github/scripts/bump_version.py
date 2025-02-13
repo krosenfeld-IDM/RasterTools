@@ -1,16 +1,16 @@
 import os
 
 from datetime import datetime
-from packaging.version import Version, parse
+from packaging.version import parse
 
 VNS = '__version__'
 VDS = '__versiondate__'
 
 
-def bump_version()
+def bump_version():
 
     print(os.getcwd())
-    fname = os.path.join('rastertools','version.py')
+    fname = os.path.join('rastertools', 'version.py')
 
     with open(fname) as fid01:
         flines = fid01.readlines()
@@ -21,7 +21,7 @@ def bump_version()
                 dval = datetime.today().strftime('%Y-%m-%d')
                 nline = VDS + ' = ' + dval + '\n'
                 fid01.write(nline)
-            elif (lval.startswith(VNS))
+            elif (lval.startswith(VNS)):
                 ver = parse(lval.split('\'')[1])
                 nver = str(ver.major) + '.' + str(ver.minor) + '.'
                 nver = nver + str(ver.micro + 1)
