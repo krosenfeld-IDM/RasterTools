@@ -1,0 +1,31 @@
+name: Increment patch version
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'rastertools/__init__.py'
+
+  # Allows manual run from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.KFREY_PAT }}
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run bump script
+        run: python ./.github/scripts/bump_version.py
+      - name: Commit version change
+        run: |
+          git add --all
+          git commit -m "Bump version"
+          cat ./rastertools/version.py
