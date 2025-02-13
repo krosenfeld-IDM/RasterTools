@@ -26,8 +26,8 @@ jobs:
         run: python ./.github/scripts/bump_version.py
       - name: Commit version change
         run: |
-          git config user.name "kfrey-IDM"
+          git config user.name "Kurt Frey"
           git config user.email "kfrey@idmod.org"
           git add .
           git commit -m "Bump version"
-          cat ./rastertools/version.py
+          git push
