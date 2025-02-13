@@ -4,7 +4,11 @@ dynamic = ["version"]
 description = "Raster and shape tools"
 license = {file = "LICENSE"}
 authors = [
-    { name="Kurt Frey", email="kfrey@idmod.org" }
+authors = [
+    { name="Kurt Frey", email="kurt.frey@gatesfoundation.org" },
+    { name="Dejan Lukacevic", email="dejan.lukacevic@gatesfoundation.org" },
+    { name="Katherine Rosenfeld", email="katherine.rosenfeld@gatesfoundation.org" }
+]
 ]
 readme = "README.md"
 requires-python = ">=3.9"
