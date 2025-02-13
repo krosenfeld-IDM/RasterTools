@@ -10,7 +10,6 @@ NLS = '\'\n'
 
 def bump_version():
 
-    print(os.getcwd())
     fname = os.path.join('rastertools', 'version.py')
 
     with open(fname) as fid01:
