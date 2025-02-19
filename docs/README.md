@@ -38,3 +38,7 @@ To build the docs, follow these steps:
     }    
     ```
 4. Build docs follow instructions above.
+
+## Making a pdf of the docs
+
+In `docs/` run `make simplepdf`.

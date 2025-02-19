@@ -13,3 +13,4 @@ nbsphinx>=0.9.5 # For tutorials
 plantweb
 sciris
 zenodo-client
+sphinx-simplepdf
