@@ -35,7 +35,7 @@ jobs:
           uv venv --python 3.10
           source .venv/bin/activate
           uv pip install .
-          uv run -p pip install -r docs/requirements.txt
+          uv pip install -r docs/requirements.txt
 
       - name: Build static files
         id: build
