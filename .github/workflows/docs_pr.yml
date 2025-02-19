@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}    
+        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
