@@ -1,7 +1,7 @@
 
-from .version import __version__, __versiondate__, __license__
-from rastertools.raster import raster_clip, raster_clip_weighted
-from rastertools.shape import shape_subdivide
+from .version import __version__, __versiondate__, __license__ # noqa : F401
+from rastertools.raster import raster_clip, raster_clip_weighted # noqa : F401
+from rastertools.shape import shape_subdivide # noqa : F401
 
 
 # module level doc-string
