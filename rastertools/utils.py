@@ -28,7 +28,9 @@ def read_json(json_path: Union[str, Path]) -> Dict[str, Any]:
     return data
 
 
-def save_json(data: Dict, json_path: Union[str, Path], sort_keys=False, indent=4) -> None:
+def save_json(
+    data: Dict, json_path: Union[str, Path], sort_keys=False, indent=4
+) -> None:
     """
     Saves a JSON object to a file.
 
@@ -42,7 +44,7 @@ def save_json(data: Dict, json_path: Union[str, Path], sort_keys=False, indent=4
         None
     """
     Path(json_path).parent.mkdir(exist_ok=True)
-    with open(json_path, 'w') as fp:
+    with open(json_path, "w") as fp:
         json.dump(data, fp, sort_keys=sort_keys, indent=indent)
 
 
@@ -58,7 +60,7 @@ def extract_archive(file_path: Union[str, Path]) -> List[str]:
     """
     dst_dir = file_path.parent.joinpath(file_path.stem)
     Path(dst_dir).mkdir(exist_ok=True, parents=True)
-    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+    with zipfile.ZipFile(file_path, "r") as zip_ref:
         print(f"Extracting file {file_path}")
         zip_ref.extractall(dst_dir)
 

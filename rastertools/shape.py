@@ -24,6 +24,7 @@ from typing import List, Tuple, Union
 
 class ShapeView:
     """Class extracting and encapsulating shape data used for raster processing."""
+
     default_shape_attr: str = "DOTNAME"
 
     def __init__(self, shape: Shape, record: ShapeRecord, name_attr: str = None):
@@ -68,7 +69,9 @@ class ShapeView:
 
     def validate(self) -> None:
         assert self.points.shape[0] != 0 and len(self.paths) > 0, "No parts in a shape."
-        assert len(self.paths) == len(self.areas), "Inconsistent number of parts in a shape."
+        assert len(self.paths) == len(self.areas), (
+            "Inconsistent number of parts in a shape."
+        )
         assert self.name is not None and self.name != "", "Shape has no name."
 
     def as_polygon(self) -> Polygon:
@@ -86,14 +89,20 @@ class ShapeView:
         return MultiPolygon([shape]) if isinstance(shape, Polygon) else shape
 
     @classmethod
-    def read_shapes(cls, shape_stem: Union[str, Path, Reader]) -> Tuple[Reader, Shapes[Shape], List[ShapeRecord]]:
-        reader: Reader = shape_stem if isinstance(shape_stem, Reader) else Reader(str(shape_stem))
+    def read_shapes(
+        cls, shape_stem: Union[str, Path, Reader]
+    ) -> Tuple[Reader, Shapes[Shape], List[ShapeRecord]]:
+        reader: Reader = (
+            shape_stem if isinstance(shape_stem, Reader) else Reader(str(shape_stem))
+        )
         shapes: Shapes[Shape] = reader.shapes()
         records: List[ShapeRecord] = reader.records()
         return reader, shapes, records
 
     @classmethod
-    def from_file(cls, shape_stem: Union[str, Path, Reader], shape_attr: Union[str, None] = None) -> List[ShapeView]:
+    def from_file(
+        cls, shape_stem: Union[str, Path, Reader], shape_attr: Union[str, None] = None
+    ) -> List[ShapeView]:
         """
         Loads a shape into a shape view class.
 
@@ -123,7 +132,7 @@ class ShapeView:
 
             # Iterate over parts of shapefile
             for k2 in range(len(prt_list) - 1):
-                shp_prt = shp.points[prt_list[k2]:prt_list[k2 + 1]]
+                shp_prt = shp.points[prt_list[k2] : prt_list[k2 + 1]]
                 path_shp = plth.Path(shp_prt, closed=True, readonly=True)
 
                 # Estimate area for part
@@ -148,7 +157,10 @@ class ShapeView:
 
 # Helpers
 
-def shapes_to_polygons_dict(shape_stem: Union[str, Path, Reader], all_multi: bool = True) -> List[MultiPolygon]:
+
+def shapes_to_polygons_dict(
+    shape_stem: Union[str, Path, Reader], all_multi: bool = True
+) -> List[MultiPolygon]:
     """
     Converts shapes from a shapefile into a dictionary of MultiPolygons.
 
@@ -164,12 +176,17 @@ def shapes_to_polygons_dict(shape_stem: Union[str, Path, Reader], all_multi: boo
     _, shapes, records = ShapeView.read_shapes(shape_stem)
     polygons = {r.DOTNAME: shapely.geometry.shape(s) for s, r in zip(shapes, records)}
     if all_multi:
-        polygons = {n: MultiPolygon([p]) if isinstance(p, Polygon) else p for n, p in polygons.items()}
+        polygons = {
+            n: MultiPolygon([p]) if isinstance(p, Polygon) else p
+            for n, p in polygons.items()
+        }
 
     return polygons
 
 
-def shapes_to_polygons(shape_stem: Union[str, Path, Reader], all_multi: bool = True) -> List[MultiPolygon]:
+def shapes_to_polygons(
+    shape_stem: Union[str, Path, Reader], all_multi: bool = True
+) -> List[MultiPolygon]:
     """
     Converts shapes from a shapefile into a list of MultiPolygons.
 
@@ -184,8 +201,9 @@ def shapes_to_polygons(shape_stem: Union[str, Path, Reader], all_multi: bool = T
     return list(d.values())
 
 
-def polygon_contains(polygon: Union[Polygon, MultiPolygon],
-                     points: Union[np.ndarray, List[Point]]) -> np.ndarray:
+def polygon_contains(
+    polygon: Union[Polygon, MultiPolygon], points: Union[np.ndarray, List[Point]]
+) -> np.ndarray:
     """
     Determines which points are inside a polygon.
 
@@ -197,7 +215,11 @@ def polygon_contains(polygon: Union[Polygon, MultiPolygon],
         np.ndarray: An array of points that are inside the polygon.
     """
     mp = prep(polygon)  # prep
-    pts: List[Point] = [Point(t[0], t[1]) for t in points] if isinstance(points, np.ndarray) else points
+    pts: List[Point] = (
+        [Point(t[0], t[1]) for t in points]
+        if isinstance(points, np.ndarray)
+        else points
+    )
     pts_in = [p for p in pts if mp.contains(p)]
     pts_in_array: np.ndarray = np.array([[p.x, p.y] for p in pts_in])
     return pts_in_array
@@ -215,20 +237,20 @@ def polygon_area_km2(polygon: Union[Polygon, MultiPolygon]) -> np.float64:
     """
     geod = Geod(ellps="WGS84")
     area, _ = geod.geometry_area_perimeter(polygon)  # perimeter ignored
-    area_km2 = np.float64(abs(area))/1000000.0
+    area_km2 = np.float64(abs(area)) / 1000000.0
     return area_km2
 
 
 def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, float]]:
     """
     Converts a polygon or linear ring to a list of coordinates.
-    
+
     Args:
         geom (Union[Polygon, LinearRing]): The polygon or linear ring to convert.
-        
+
     Returns:
         List[Tuple[float, float]]: A list of coordinates.
-        
+
     """
     if isinstance(geom, Polygon):
         xy_set = geom.exterior.coords
@@ -267,7 +289,7 @@ def area_sphere(shape_points) -> float:
         JGeod (2013) v87 p43-55
 
     Args:
-        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape
             (first point equals last point, clockwise direction is positive).
 
     Returns:
@@ -278,7 +300,11 @@ def area_sphere(shape_points) -> float:
     beta2 = sp_rad[1:, 1]
     domeg = sp_rad[1:, 0] - sp_rad[:-1, 0]
 
-    val1 = np.tan(domeg / 2) * np.sin((beta2 + beta1) / 2.0) * np.cos((beta2 - beta1) / 2.0)
+    val1 = (
+        np.tan(domeg / 2)
+        * np.sin((beta2 + beta1) / 2.0)
+        * np.cos((beta2 - beta1) / 2.0)
+    )
     dalph = 2.0 * np.arctan(val1)
     tarea = 6371.0 * 6371.0 * np.sum(dalph)
 
@@ -294,15 +320,17 @@ def centroid_area(shape_points) -> Tuple[float, float, float]:
         and should only be used in weighting multi-part shape centroids.
 
     Args:
-        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape
             (first point equals last point, clockwise direction is positive).
 
     Returns:
         tuple: A tuple containing the centroid coordinates and area as floats (Cx, Cy, A).
     """
 
-    a_vec = (shape_points[:-1, 0] * shape_points[1:, 1] -
-             shape_points[1:, 0] * shape_points[:-1, 1])
+    a_vec = (
+        shape_points[:-1, 0] * shape_points[1:, 1]
+        - shape_points[1:, 0] * shape_points[:-1, 1]
+    )
 
     A = np.sum(a_vec) / 2.0
     Cx = np.sum((shape_points[:-1, 0] + shape_points[1:, 0]) * a_vec) / 6.0 / A
@@ -312,23 +340,25 @@ def centroid_area(shape_points) -> Tuple[float, float, float]:
 
 
 def long_mult(lat):  # latitude in degrees
-    """ Returns the multiplier for longitude based on latitude. """
-    return 1.0/np.cos(lat*np.pi/180.0)
+    """Returns the multiplier for longitude based on latitude."""
+    return 1.0 / np.cos(lat * np.pi / 180.0)
 
 
 # API
 
 
-def shape_subdivide(shape_stem: Union[str, Path],
-                    out_dir: Union[str, Path] = None,
-                    out_suffix: str = None,
-                    output_centers: bool = False,
-                    top_n: int = None,
-                    shape_attr: str = "DOTNAME",
-                    box_target_area_km2: int = None,
-                    points_per_box: int = None,
-                    random_seed: int = None,
-                    verbose: bool = False) -> str:
+def shape_subdivide(
+    shape_stem: Union[str, Path],
+    out_dir: Union[str, Path] = None,
+    out_suffix: str = None,
+    output_centers: bool = False,
+    top_n: int = None,
+    shape_attr: str = "DOTNAME",
+    box_target_area_km2: int = None,
+    points_per_box: int = None,
+    random_seed: int = None,
+    verbose: bool = False,
+) -> str:
     """
     Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
 
@@ -337,9 +367,9 @@ def shape_subdivide(shape_stem: Union[str, Path],
         out_dir (str, optional): Local directory where outputs are stored. Defaults to a new temporary directory.
         out_suffix (str, optional): Suffix of the output stem. Defaults to a suffix containing `box_target_area_km2`.
         output_centers (bool, optional): Flag controlling whether to export sub-shape centers. Defaults to False.
-        top_n (int, optional): Number of top MultiPolygons to process. Used for testing large datasets. 
+        top_n (int, optional): Number of top MultiPolygons to process. Used for testing large datasets.
             By default, all MultiPolygons are processed.
-        shape_attr (str, optional): The shape's attribute used as a prefix for the output shape's identity attribute. 
+        shape_attr (str, optional): The shape's attribute used as a prefix for the output shape's identity attribute.
             Defaults to "DOTNAME".
         box_target_area_km2 (float, optional): Target box area used to calculate the number of boxes (clusters).
         points_per_box (int, optional): Points-per-box dimension. Higher values result in slower but more accurate processing.
@@ -358,7 +388,9 @@ def shape_subdivide(shape_stem: Union[str, Path],
     points_per_box = points_per_box or 250
     random_seed = random_seed or 4
 
-    assert box_target_area_km2 > 0, "Argument 'box_target_area_km2' must be a positive integer."
+    assert box_target_area_km2 > 0, (
+        "Argument 'box_target_area_km2' must be a positive integer."
+    )
     assert points_per_box > 0, "Argument 'points_per_box' must be a positive integer."
     assert random_seed > 0, "Argument 'random_seed' must be a positive integer."
 
@@ -375,12 +407,14 @@ def shape_subdivide(shape_stem: Union[str, Path],
 
     out_shape_stem.parent.mkdir(exist_ok=True, parents=True)
     sf1new = Writer(out_shape_stem)
-    sf1new.field(shape_attr, 'C', 70, 0)
-    sf1new.fields.extend([tuple(t) for t in sf1.fields if t[0] not in ["DeletionFlag", shape_attr]])
+    sf1new.field(shape_attr, "C", 70, 0)
+    sf1new.fields.extend(
+        [tuple(t) for t in sf1.fields if t[0] not in ["DeletionFlag", shape_attr]]
+    )
 
     if output_centers:
         sf1new2 = Writer(f"{out_shape_stem}_centers", shapeType=POINT)
-        sf1new2.field(shape_attr, 'C', 70, 0)
+        sf1new2.field(shape_attr, "C", 70, 0)
     else:
         sf1new2 = None
 
@@ -397,8 +431,8 @@ def shape_subdivide(shape_stem: Union[str, Path],
 
     for k1, multi in enumerate(multi_list[:top_n]):
         multi_area = polygon_area_km2(multi)
-        num_box = np.maximum(int(np.round(multi_area/box_target_area_km2)), 1)
-        pts_dim = int(np.ceil(np.sqrt(points_per_box*num_box)))
+        num_box = np.maximum(int(np.round(multi_area / box_target_area_km2)), 1)
+        pts_dim = int(np.ceil(np.sqrt(points_per_box * num_box)))
 
         if not multi.is_valid:
             multi = multi.buffer(0)  # this seems to be fixing broken multi-polygons.
@@ -409,7 +443,9 @@ def shape_subdivide(shape_stem: Union[str, Path],
             # Debug logging: shapefile index, target number of subdivisions
             bounds_str = str([round(v, 2) for v in multi.bounds])
             if verbose:
-                print(f"MultiPolygon: {k1:<5} {bounds_str:<32} Number of boxes: {num_box}")
+                print(
+                    f"MultiPolygon: {k1:<5} {bounds_str:<32} Number of boxes: {num_box}"
+                )
         else:
             Warning(f"Unable to fix the MultiPolygon {k1}!")
 
@@ -418,21 +454,29 @@ def shape_subdivide(shape_stem: Union[str, Path],
         # be increased based on y value.
         xspan = [multi.bounds[0], multi.bounds[2]]
         yspan = [multi.bounds[1], multi.bounds[3]]
-        xcv, ycv = np.meshgrid(np.linspace(xspan[0], xspan[1], pts_dim),
-                               np.linspace(yspan[0], yspan[1], pts_dim))
+        xcv, ycv = np.meshgrid(
+            np.linspace(xspan[0], xspan[1], pts_dim),
+            np.linspace(yspan[0], yspan[1], pts_dim),
+        )
 
-        pts_vec = np.zeros((pts_dim*pts_dim, 2))
-        pts_vec[:, 0] = np.reshape(xcv, pts_dim*pts_dim)
-        pts_vec[:, 1] = np.reshape(ycv, pts_dim*pts_dim)
-        pts_vec[:, 0] = pts_vec[:, 0] * long_mult(pts_vec[:, 1]) - xspan[0]*(long_mult(pts_vec[:, 1]) - 1)
+        pts_vec = np.zeros((pts_dim * pts_dim, 2))
+        pts_vec[:, 0] = np.reshape(xcv, pts_dim * pts_dim)
+        pts_vec[:, 1] = np.reshape(ycv, pts_dim * pts_dim)
+        pts_vec[:, 0] = pts_vec[:, 0] * long_mult(pts_vec[:, 1]) - xspan[0] * (
+            long_mult(pts_vec[:, 1]) - 1
+        )
 
         # Same idea here as in raster clipping; identify points that are inside the shape
         # and keep track of them using inBool
         pts_vec_in = polygon_contains(multi, pts_vec)
 
         # Feed points interior to shape into k-means clustering to get num_box equal(-ish) clusters;
-        sub_clust = KMeans(n_clusters=num_box, random_state=random_seed, n_init='auto').fit(pts_vec_in)
-        sub_node = sub_clust.cluster_centers_  # this is not a bug, that is the actual name of the property
+        sub_clust = KMeans(
+            n_clusters=num_box, random_state=random_seed, n_init="auto"
+        ).fit(pts_vec_in)
+        sub_node = (
+            sub_clust.cluster_centers_
+        )  # this is not a bug, that is the actual name of the property
 
         # Don't actually want the cluster centers, goal is the outlines. Going from centers
         # to outlines uses Voronoi tessellation. Add a box of external points to avoid mucking
@@ -449,13 +493,17 @@ def shape_subdivide(shape_stem: Union[str, Path],
         for vor_reg in vor_obj.regions:
             if -1 in vor_reg or len(vor_reg) == 0:
                 continue
-            vor_loop = np.append(vor_vert[vor_reg, :], vor_vert[vor_reg[0:1], :], axis=0)
+            vor_loop = np.append(
+                vor_vert[vor_reg, :], vor_vert[vor_reg[0:1], :], axis=0
+            )
             vor_list.append(vor_loop)
 
         # If there's not 1 Voronoi region outline for each k-means cluster center
         # at this point, something has gone very wrong. Time to bail.
         if len(vor_list) != len(sub_node):
-            raise ValueError("Failed to create a Voronoi region outline for each k-means cluster center.")
+            raise ValueError(
+                "Failed to create a Voronoi region outline for each k-means cluster center."
+            )
 
         # The Voronoi region outlines may extend beyond the shape outline and/or
         # overlap with negative spaces, so intersect each Voronoi region with the
@@ -471,8 +519,12 @@ def shape_subdivide(shape_stem: Union[str, Path],
             dotname_new = f"{dotname}:A{k2:04d}"
             new_recs[dotname_index] = dotname_new
 
-            assert poly_reg.geom_type in ["Polygon", "MultiPolygon"], "Unsupported geometry type"
-            poly_list = poly_reg.geoms if poly_reg.geom_type == "MultiPolygon" else [poly_reg]
+            assert poly_reg.geom_type in ["Polygon", "MultiPolygon"], (
+                "Unsupported geometry type"
+            )
+            poly_list = (
+                poly_reg.geoms if poly_reg.geom_type == "MultiPolygon" else [poly_reg]
+            )
             poly_as_list = polygons_to_parts(poly_list)
 
             # Add the new shape to the shapefile; splat the record
@@ -492,27 +544,29 @@ def shape_subdivide(shape_stem: Union[str, Path],
     return str(out_shape_stem)
 
 
-def plot_shapes(shape_stem: Union[str, Path],
-                ax: plt.Axes = None,
-                alpha: float = 1.0,
-                color: Union[str, None] = None,
-                linewidth: float = 1,
-                **kwargs) -> Tuple[plt.Figure, plt.Axes]:
+def plot_shapes(
+    shape_stem: Union[str, Path],
+    ax: plt.Axes = None,
+    alpha: float = 1.0,
+    color: Union[str, None] = None,
+    linewidth: float = 1,
+    **kwargs,
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plots shapes from a shapefile.
-    
+
     Args:
-    
+
         shape_stem (Union[str, Path]): The path or identifier for the shapefile.
         ax (plt.Axes, optional): The axis to plot the shapes on. Defaults to None.
         alpha (float, optional): The transparency of the shapes. Defaults to 1.0.
         color (Union[str, None], optional): The color of the shapes. Defaults to None.
         linewidth (float, optional): The width of the line. Defaults to 1.
         **kwargs: Additional keyword arguments for the plot.
-        
+
     Returns:
         Tuple[plt.Figure, plt.Axes]: The figure and axis objects.
-        """
+    """
     # Plot sub-shapes
     if ax is None:
         fig, ax = plt.subplots()
@@ -520,9 +574,9 @@ def plot_shapes(shape_stem: Union[str, Path],
         fig = None
 
     if color is not None:
-        kwargs['facecolor'] = color
-    kwargs['alpha'] = alpha
-    kwargs['linewidth'] = linewidth
+        kwargs["facecolor"] = color
+    kwargs["alpha"] = alpha
+    kwargs["linewidth"] = linewidth
 
     multi_list: List[MultiPolygon] = shapes_to_polygons(shape_stem)
     x_min, x_max, y_min, y_max = -360.0, 360.0, -90.0, 90.0
@@ -541,11 +595,13 @@ def plot_shapes(shape_stem: Union[str, Path],
 
 
 # Plot generated shapes into a file
-def plot_subdivision(shape_file: Union[str, Path],
-                     subdivision_stam: Union[str, Path],
-                     shape_color: str = "gray",
-                     subdivision_color: str = "red",
-                     png_dpi=1800):
+def plot_subdivision(
+    shape_file: Union[str, Path],
+    subdivision_stam: Union[str, Path],
+    shape_color: str = "gray",
+    subdivision_color: str = "red",
+    png_dpi=1800,
+):
     """
     Plots shapes and their subdivisions into a PNG file.
 
@@ -560,11 +616,15 @@ def plot_subdivision(shape_file: Union[str, Path],
         None
     """
     png_file = Path(subdivision_stam).with_suffix(".png")
-    fig, ax = plot_shapes(shape_file, alpha=0.5, color=None, linewidth=1.0, edgecolor=shape_color)
-    plot_shapes(subdivision_stam, ax=ax, color='None', alpha=0.3, linewidth=0.2, edgecolor=subdivision_color)
+    fig, ax = plot_shapes(
+        shape_file, alpha=0.5, color=None, linewidth=1.0, edgecolor=shape_color
+    )
+    plot_shapes(
+        subdivision_stam,
+        ax=ax,
+        color="None",
+        alpha=0.3,
+        linewidth=0.2,
+        edgecolor=subdivision_color,
+    )
     fig.savefig(png_file, dpi=png_dpi)
-
-
-
-
-
