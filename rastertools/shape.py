@@ -214,14 +214,20 @@ def area_sphere(shape_points) -> float:
     return tarea
 
 
-def centroid_area(shape_points) -> (float, float, float):
+def centroid_area(shape_points) -> Tuple[float, float, float]:
     """
-    Calculates the area centroid of a polygon based on cartesean coordinates.
-    Area calculated by this function is not a good estimate for a spherical
-    polygon, and should only be used in weighting multi-part shape centroids.
-    :param shape_points: point (N,2) numpy array representing a shape
-                        (first == last point, clockwise == positive)
-    :return: (Cx, Cy, A) Coordinates and area as floats
+    Calculates the area centroid of a polygon based on Cartesian coordinates.
+
+    Note:
+        The area calculated by this function is not a good estimate for a spherical polygon
+        and should only be used in weighting multi-part shape centroids.
+
+    Args:
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+            (first point equals last point, clockwise direction is positive).
+
+    Returns:
+        tuple: A tuple containing the centroid coordinates and area as floats (Cx, Cy, A).
     """
 
     a_vec = (shape_points[:-1, 0] * shape_points[1:, 1] -
@@ -253,17 +259,23 @@ def shape_subdivide(shape_stem: Union[str, Path],
                     verbose: bool = False) -> str:
     """
     Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
-    :param shape_stem: Local shape file path or stem (path without extension).
-    :param out_dir: Local dir where outputs are stored. Default is a new temp dir.
-    :param out_suffix: Suffix of the output stem. Default is a suffix containing box_target_area_km2.
-    :param output_centers: A flag controlling whether to export sub-shape centers. Default is False.
-    :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
-    :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
-    :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
-    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
-    :param random_seed: Random seed, expose for reproducibility.
-    :param verbose: Show debug info.
-    :return: Local path prefix (out shapes stem).
+
+    Args:
+        shape_stem (str): Local shape file path or stem (path without extension).
+        out_dir (str, optional): Local directory where outputs are stored. Defaults to a new temporary directory.
+        out_suffix (str, optional): Suffix of the output stem. Defaults to a suffix containing `box_target_area_km2`.
+        output_centers (bool, optional): Flag controlling whether to export sub-shape centers. Defaults to False.
+        top_n (int, optional): Number of top MultiPolygons to process. Used for testing large datasets. 
+            By default, all MultiPolygons are processed.
+        shape_attr (str, optional): The shape's attribute used as a prefix for the output shape's identity attribute. 
+            Defaults to "DOTNAME".
+        box_target_area_km2 (float, optional): Target box area used to calculate the number of boxes (clusters).
+        points_per_box (int, optional): Points-per-box dimension. Higher values result in slower but more accurate processing.
+        random_seed (int, optional): Random seed for reproducibility.
+        verbose (bool, optional): Whether to show debug information.
+
+    Returns:
+        str: Local path prefix (output shapes stem).
     """
 
     shape_stem = Path(shape_stem)
