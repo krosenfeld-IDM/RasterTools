@@ -198,9 +198,17 @@ def polygons_to_parts(polygons: List[Polygon]) -> List[List[Tuple[float, float]]
 
 def area_sphere(shape_points) -> float:
     """
-    Calculates Area of a polygon on a sphere; JGeod (2013) v87 p43-55
-    :param shape_points: point (N,2) numpy array representing a shape (first == last point, clockwise == positive)
-    :return: shape area as a float
+    Calculates the area of a polygon on a sphere.
+
+    Reference:
+        JGeod (2013) v87 p43-55
+
+    Args:
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+            (first point equals last point, clockwise direction is positive).
+
+    Returns:
+        float: The area of the polygon.
     """
     sp_rad = np.radians(shape_points)
     beta1 = sp_rad[:-1, 1]
