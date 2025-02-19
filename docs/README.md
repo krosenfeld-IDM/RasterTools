@@ -6,7 +6,7 @@ Please see the `tutorials` subfolder.
 
 ## Everything else
 
-This folder includes source code for building the docs. Users are unlikely to need to do this themselves. Instead, view the Starsim docs at http://docs.starsim.org.
+This folder includes source code for building the docs. Users are unlikely to need to do this themselves.
 
 To build the docs, follow these steps:
 
