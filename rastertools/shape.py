@@ -410,15 +410,21 @@ def shape_subdivide(shape_stem: Union[str, Path],
 
 def plot_shapes(shape_stem: Union[str, Path],
                 ax: plt.Axes = None,
-                alpha: float = 0.5,
-                color: str = "red",
-                line_width: float = 1) -> Tuple[plt.Figure, plt.Axes]:
+                alpha: float = 1.0,
+                color: Union[str, None] = None,
+                linewidth: float = 1,
+                **kwargs) -> Tuple[plt.Figure, plt.Axes]:
 
     # Plot sub-shapes
     if ax is None:
         fig, ax = plt.subplots()
     else:
         fig = None
+
+    if color is not None:
+        kwargs['facecolor'] = color
+    kwargs['alpha'] = alpha
+    kwargs['linewidth'] = linewidth
 
     multi_list: List[MultiPolygon] = shapes_to_polygons(shape_stem)
     x_min, x_max, y_min, y_max = -360.0, 360.0, -90.0, 90.0
@@ -427,8 +433,7 @@ def plot_shapes(shape_stem: Union[str, Path],
             x, y = poly.exterior.xy
             x_min, x_max = max(x_min, min(x)), min(x_max, max(x))
             y_min, y_max = max(y_min, min(y)), min(y_max, max(y))
-            ax.fill(x, y, alpha=alpha, linewidth=line_width)
-            ax.fill(x, y, alpha=alpha, linewidth=line_width, color=color)
+            ax.fill(x, y, **kwargs)
 
     # Set the axis limits and show the plot
     ax.set_xlim(x_min, x_max)
@@ -444,6 +449,6 @@ def plot_subdivision(shape_file: Union[str, Path],
                      subdivision_color: str = "red",
                      png_dpi=1800):
     png_file = Path(subdivision_stam).with_suffix(".png")
-    fig, ax = plot_shapes(shape_file, color=shape_color, alpha=0.5, line_width=1.0)
-    plot_shapes(subdivision_stam, ax=ax, color=subdivision_color, alpha=0.3, line_width=0.2)
+    fig, ax = plot_shapes(shape_file, color=shape_color, alpha=0.5, linewidth=1.0)
+    plot_shapes(subdivision_stam, ax=ax, color=subdivision_color, alpha=0.3, linewidth=0.2)
     fig.savefig(png_file, dpi=png_dpi)
