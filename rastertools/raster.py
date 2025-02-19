@@ -21,14 +21,18 @@ def raster_clip(raster_file: Union[str, Path],
                 include_latlon: bool = False,
                 quiet: bool = False) -> Dict[str, Union[float, int]]:
     """
-    Extract data from a raster based on shapes.
-    :param raster_file: Local path to a raster file.
-    :param shape_stem: Local path stem referencing a set of shape files.
-    :param shape_attr: The shape attribute name to be used as output dictionary key.
-    :param summary_func: Aggregation func to be used for summarizing clipped data for each shape.
-    :param include_latlon: The flag to include lat/lon in the dict entry.
-    :param quiet: The flag to control if status is printed.
-    :return: Dictionary with dot names as keys and calculates aggregations as values.
+    Extracts data from a raster based on shapes.
+
+    Args:
+        raster_file (str): Local path to a raster file.
+        shape_stem (str): Local path stem referencing a set of shape files.
+        shape_attr (str): The shape attribute name to be used as the output dictionary key.
+        summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool, optional): Flag to include lat/lon in the dictionary entry. Defaults to False.
+        quiet (bool, optional): Flag to control whether status messages are printed. Defaults to False.
+
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
     """
     assert Path(raster_file).is_file(), "Raster file not found."
 
@@ -106,14 +110,18 @@ def raster_clip_weighted(raster_weight: Union[str, Path],
                          weight_summary_func: Callable = None,
                          include_latlon: bool = False) -> Dict[str, Union[float, int]]:
     """
-    Extract data from a raster based on shapes.
-    :param raster_weight: Local path to a raster file used for weights.
-    :param raster_value: Local path to a raster file used for values.
-    :param shape_stem: Local path stem referencing a set of shape files.
-    :param shape_attr: The shape attribute name to be use as output dictionary key.
-    :param weight_summary_func: Aggregation func to be used for summarizing clipped data for each shape.
-    :param include_latlon: The flag to include lat/lon in the dict entry.
-    :return: Dictionary with dot names as keys and calculates aggregations as values.
+    Extracts data from a raster based on shapes.
+
+    Args:
+        raster_weight (str): Local path to a raster file used for weights.
+        raster_value (str): Local path to a raster file used for values.
+        shape_stem (str): Local path stem referencing a set of shape files.
+        shape_attr (str): The shape attribute name to be used as the output dictionary key.
+        weight_summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool, optional): Flag to include lat/lon in the dictionary entry. Defaults to False.
+
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
     """
     assert Path(raster_weight).is_file(), "Population raster file not found."
     assert Path(raster_value).is_file(), "Values raster file not found."
@@ -165,10 +173,16 @@ def default_summary_func(v: np.ndarray) -> int:
 
 def get_tiff_tags(raster: Image) -> Dict[str, Any]:
     """
-    Read tags from a TIFF file
-    https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
-    :param raster: TIFF object
-    :return: Dictionary of tag names and values.
+    Reads tags from a TIFF file.
+
+    Reference:
+        https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
+
+    Args:
+        raster (TIFF): TIFF object.
+
+    Returns:
+        dict: A dictionary of tag names and values.
     """
     return {TAGS[t]: raster.tag[t] for t in dict(raster.tag)}
 
