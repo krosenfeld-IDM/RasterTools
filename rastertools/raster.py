@@ -74,6 +74,21 @@ def raster_clip(raster_file: Union[str, Path],
 
 
 def raster_clip_single(shp, sparce_data, k1, shape_len, summary_func, include_latlon, quiet):
+    """
+    Extracts data from a raster based on shapes.
+    
+    Args:
+        shp (ShapeView): Shape object.
+        sparce_data (np.ndarray): Sparce matrix of raster data.
+        k1 (int): Index of the shape.
+        shape_len (int): Total number of shapes.
+        summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool): Flag to include lat/lon in the dictionary entry.
+        quiet (bool): Flag to control whether status messages are printed.
+        
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
+    """
     data_dict = {}
     show_status = not quiet or k1 % 1000 == 0 or k1 in [0, shape_len - 1]
     # Null shape; error in shapefile
@@ -168,6 +183,7 @@ def raster_clip_weighted(raster_weight: Union[str, Path],
 
 
 def default_summary_func(v: np.ndarray) -> int:
+    """ Sum an array and round to the nearest integer. """
     return int(np.round(np.sum(v), 0))
 
 
@@ -188,6 +204,16 @@ def get_tiff_tags(raster: Image) -> Dict[str, Any]:
 
 
 def extract_xy_info_from_raster(raster: Image) -> Tuple[float, float, float, float]:
+    """
+    Extracts x, y, dx, and dy from a raster TIFF file.
+    
+    Args:
+        raster (TIFF): TIFF object.
+        
+    Returns:
+    tuple: A tuple of x, y, dx, and dy.
+    """
+
     # Extract data from raster
     tags = get_tiff_tags(raster)
     point = tags["ModelTiepointTag"]
@@ -205,6 +231,8 @@ def extract_xy_info_from_raster(raster: Image) -> Tuple[float, float, float, flo
 
 
 def init_sparce_matrix(raster: Image) -> np.ndarray:
+    """ Initialize a matrix from a raster TIFF file with values > 0 """
+
     # Extract data from raster
     x0, y0, dx, dy = extract_xy_info_from_raster(raster)
 
@@ -221,6 +249,17 @@ def init_sparce_matrix(raster: Image) -> np.ndarray:
 
 
 def subset_matrix_for_clipping(shape: ShapeView, sparce_data: np.ndarray, pad: int = 0) -> np.ndarray:
+    """ 
+    Subset the matrix for clipping
+     
+    Args:
+        shape (ShapeView): Shape object.
+        sparce_data (np.ndarray): Sparce matrix of raster data.
+        pad (int): Padding for clipping.
+        
+    Returns:
+        np.ndarray: A subset of the matrix for clipping.
+    """
     clip_bool1 = np.logical_and(sparce_data[:, 0] > shape.xy_min[0] - pad, sparce_data[:, 1] > shape.xy_min[1] - pad)
     clip_bool2 = np.logical_and(sparce_data[:, 0] < shape.xy_max[0] + pad, sparce_data[:, 1] < shape.xy_max[1] + pad)
     data_clip = sparce_data[np.logical_and(clip_bool1, clip_bool2), :]
@@ -229,6 +268,17 @@ def subset_matrix_for_clipping(shape: ShapeView, sparce_data: np.ndarray, pad: i
 
 
 def summary_entry(shape: ShapeView, entry: Union[Dict, float, int], include_latlon: bool) -> Union[Dict, float, int]:
+    """
+    Summarize the entry for the shape.
+
+    Args:
+        shape (ShapeView): Shape object.
+        entry (Union[Dict, float, int]): Entry for the shape.
+        include_latlon (bool): Flag to include lat/lon in the dictionary entry.
+    
+    Returns:
+        Union[Dict, float, int]: The summarized entry for the shape.
+    """
     if include_latlon:
         assert isinstance(entry, dict) and len(entry) > 0, "Invalid entry."
         lon = shape.center[0] if shape else np.nan
@@ -245,6 +295,16 @@ def summary_entry(shape: ShapeView, entry: Union[Dict, float, int], include_latl
 
 
 def is_interior(shape: ShapeView, data_clip: np.ndarray) -> bool:
+    """
+    Check if the data is interior to the shape.
+
+    Args:
+        shape (ShapeView): Shape object.
+        data_clip (np.ndarray): Clipped data.
+
+    Returns:
+        bool: True if the data is interior to the shape.
+    """
     # Track booleans (indicates if lat/long is interior)
     data_bool = np.zeros(data_clip.shape[0], dtype=bool)
 
@@ -260,6 +320,7 @@ def is_interior(shape: ShapeView, data_clip: np.ndarray) -> bool:
 
 
 def print_status(shape: ShapeView, data_dict: Dict, k1: int, shape_count: int) -> None:
+    """ Print status message. """
     perc = round(100*(k1 + 1)/shape_count)
     print(k1 + 1, 'of', shape_count, f"({perc}%)", shape.name, shape.center, data_dict[shape.name])
 
@@ -268,6 +329,18 @@ def interpolate_at_weight_data(shape: ShapeView,
                                weight_clip: np.ndarray,
                                value_clip: np.ndarray,
                                data_bool: bool) -> float:
+    """
+    Interpolate at weight data.
+
+    Args:
+        shape (ShapeView): Shape object.
+        weight_clip (np.ndarray): Clipped weight data.
+        value_clip (np.ndarray): Clipped value data.
+        data_bool (bool): Boolean indicating if the data is interior to the shape.
+
+    Returns:
+        float: The interpolated value at weight data.
+    """
     # Calculate population weighted value
     weight = np.sum(weight_clip[data_bool, 2])
 
