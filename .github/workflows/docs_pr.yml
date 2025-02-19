@@ -31,7 +31,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          git pull --all
           pixi global install pandoc
           uv venv -python=3.10
           source .venv/bin/activate
