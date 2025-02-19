@@ -31,7 +31,7 @@ class ShapeView:
         self.shape: Shape = shape
         self._points: np.ndarray = None
         self.record: ShapeRecord = record
-        self.center: (float, float) = (0.0, 0.0)
+        self.center: Tuple[float, float] = (0.0, 0.0)
         self.paths: List[plth.Path] = []
         self.areas: List[float] = []
 
@@ -95,10 +95,14 @@ class ShapeView:
     @classmethod
     def from_file(cls, shape_stem: Union[str, Path, Reader], shape_attr: Union[str, None] = None) -> List[ShapeView]:
         """
-        Load shape into a shape view class.
-        :param shape_stem: Local path stem referencing a set of shape files.
-        :param shape_attr: The shape attribute name to be use as output dictionary key.
-        :return: List of ShapeView objects, containing parsed shape info.
+        Loads a shape into a shape view class.
+
+        Args:
+            shape_stem (str): Local path stem referencing a set of shape files.
+            shape_attr (str): The shape attribute name to be used as the output dictionary key.
+
+        Returns:
+            list: A list of `ShapeView` objects containing parsed shape information.
         """
         # Shapefiles
         reader, sf1s, sf1r = cls.read_shapes(shape_stem)
@@ -145,6 +149,16 @@ class ShapeView:
 # Helpers
 
 def shapes_to_polygons_dict(shape_stem: Union[str, Path, Reader], all_multi: bool = True) -> List[MultiPolygon]:
+    """
+    Converts shapes from a shapefile into a dictionary of MultiPolygons.
+
+    Args:
+        shape_stem (Union[str, Path, Reader]): The path or identifier for the shapefile.
+        all_multi (bool, optional): If True, ensures all geometries are MultiPolygons. Defaults to True.
+
+    Returns:
+        List[MultiPolygon]: A dictionary where keys are shape identifiers and values are MultiPolygon objects.
+    """
     # Example loading shape files as multi polygons
     # https://gis.stackexchange.com/questions/70591/creating-shapely-multipolygons-from-shapefile-multipolygons
     _, shapes, records = ShapeView.read_shapes(shape_stem)
@@ -156,12 +170,32 @@ def shapes_to_polygons_dict(shape_stem: Union[str, Path, Reader], all_multi: boo
 
 
 def shapes_to_polygons(shape_stem: Union[str, Path, Reader], all_multi: bool = True) -> List[MultiPolygon]:
+    """
+    Converts shapes from a shapefile into a list of MultiPolygons.
+
+    Args:
+        shape_stem (Union[str, Path, Reader]): The path or identifier for the shapefile.
+        all_multi (bool, optional): If True, ensures all geometries are MultiPolygons. Defaults to True.
+
+    Returns:
+        List[MultiPolygon]: A list of MultiPolygon objects.
+    """
     d = shapes_to_polygons_dict(shape_stem=shape_stem, all_multi=all_multi)
     return list(d.values())
 
 
 def polygon_contains(polygon: Union[Polygon, MultiPolygon],
                      points: Union[np.ndarray, List[Point]]) -> np.ndarray:
+    """
+    Determines which points are inside a polygon.
+
+    Args:
+        polygon (Union[Polygon, MultiPolygon]): The polygon to check.
+        points (Union[np.ndarray, List[Point]]): The points to check.
+
+    Returns:
+        np.ndarray: An array of points that are inside the polygon.
+    """
     mp = prep(polygon)  # prep
     pts: List[Point] = [Point(t[0], t[1]) for t in points] if isinstance(points, np.ndarray) else points
     pts_in = [p for p in pts if mp.contains(p)]
@@ -170,6 +204,15 @@ def polygon_contains(polygon: Union[Polygon, MultiPolygon],
 
 
 def polygon_area_km2(polygon: Union[Polygon, MultiPolygon]) -> np.float64:
+    """
+    Calculates the area of a polygon in square kilometers.
+
+    Args:
+        polygon (Union[Polygon, MultiPolygon]): The polygon to calculate the area for.
+
+    Returns:
+        np.float64: The area of the polygon in square kilometers
+    """
     geod = Geod(ellps="WGS84")
     area, _ = geod.geometry_area_perimeter(polygon)  # perimeter ignored
     area_km2 = np.float64(abs(area))/1000000.0
@@ -177,6 +220,16 @@ def polygon_area_km2(polygon: Union[Polygon, MultiPolygon]) -> np.float64:
 
 
 def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, float]]:
+    """
+    Converts a polygon or linear ring to a list of coordinates.
+    
+    Args:
+        geom (Union[Polygon, LinearRing]): The polygon or linear ring to convert.
+        
+    Returns:
+        List[Tuple[float, float]]: A list of coordinates.
+        
+    """
     if isinstance(geom, Polygon):
         xy_set = geom.exterior.coords
     elif isinstance(geom, LinearRing):
@@ -190,6 +243,16 @@ def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, flo
 
 
 def polygons_to_parts(polygons: List[Polygon]) -> List[List[Tuple[float, float]]]:
+    """
+    Converts a list of polygons to a list of parts.
+
+    Args:
+        polygons (List[Polygon]): A list of polygons to convert.
+
+    Returns:
+        List[List[Tuple[float, float]]]: A list of parts
+    """
+
     all_polygons = [[p] + list(p.interiors) for p in polygons]
     all_polygons_list = list(itertools.chain(*all_polygons))
     poly_as_list = [polygon_to_coords(p) for p in all_polygons_list]
@@ -198,9 +261,17 @@ def polygons_to_parts(polygons: List[Polygon]) -> List[List[Tuple[float, float]]
 
 def area_sphere(shape_points) -> float:
     """
-    Calculates Area of a polygon on a sphere; JGeod (2013) v87 p43-55
-    :param shape_points: point (N,2) numpy array representing a shape (first == last point, clockwise == positive)
-    :return: shape area as a float
+    Calculates the area of a polygon on a sphere.
+
+    Reference:
+        JGeod (2013) v87 p43-55
+
+    Args:
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+            (first point equals last point, clockwise direction is positive).
+
+    Returns:
+        float: The area of the polygon.
     """
     sp_rad = np.radians(shape_points)
     beta1 = sp_rad[:-1, 1]
@@ -214,14 +285,20 @@ def area_sphere(shape_points) -> float:
     return tarea
 
 
-def centroid_area(shape_points) -> (float, float, float):
+def centroid_area(shape_points) -> Tuple[float, float, float]:
     """
-    Calculates the area centroid of a polygon based on cartesean coordinates.
-    Area calculated by this function is not a good estimate for a spherical
-    polygon, and should only be used in weighting multi-part shape centroids.
-    :param shape_points: point (N,2) numpy array representing a shape
-                        (first == last point, clockwise == positive)
-    :return: (Cx, Cy, A) Coordinates and area as floats
+    Calculates the area centroid of a polygon based on Cartesian coordinates.
+
+    Note:
+        The area calculated by this function is not a good estimate for a spherical polygon
+        and should only be used in weighting multi-part shape centroids.
+
+    Args:
+        shape_points (numpy.ndarray): A (N,2) numpy array representing a shape 
+            (first point equals last point, clockwise direction is positive).
+
+    Returns:
+        tuple: A tuple containing the centroid coordinates and area as floats (Cx, Cy, A).
     """
 
     a_vec = (shape_points[:-1, 0] * shape_points[1:, 1] -
@@ -235,6 +312,7 @@ def centroid_area(shape_points) -> (float, float, float):
 
 
 def long_mult(lat):  # latitude in degrees
+    """ Returns the multiplier for longitude based on latitude. """
     return 1.0/np.cos(lat*np.pi/180.0)
 
 
@@ -253,17 +331,23 @@ def shape_subdivide(shape_stem: Union[str, Path],
                     verbose: bool = False) -> str:
     """
     Creates a new shapefile that subdivides the original shapes based on area (unweighted) or population (weighted).
-    :param shape_stem: Local shape file path or stem (path without extension).
-    :param out_dir: Local dir where outputs are stored. Default is a new temp dir.
-    :param out_suffix: Suffix of the output stem. Default is a suffix containing box_target_area_km2.
-    :param output_centers: A flag controlling whether to export sub-shape centers. Default is False.
-    :param top_n: Process top n MultiPolygons. Used to test large datasets. By default, all MultiPolygons are processed.
-    :param shape_attr: The shape's attribute used as a prefix of output shapes identity attribute. Default is "DOTNAME".
-    :param box_target_area_km2: Target box area used to calculate the number of boxes (clusters).
-    :param points_per_box: Points-per-box-dimension. Higher is slower and more accurate.
-    :param random_seed: Random seed, expose for reproducibility.
-    :param verbose: Show debug info.
-    :return: Local path prefix (out shapes stem).
+
+    Args:
+        shape_stem (str): Local shape file path or stem (path without extension).
+        out_dir (str, optional): Local directory where outputs are stored. Defaults to a new temporary directory.
+        out_suffix (str, optional): Suffix of the output stem. Defaults to a suffix containing `box_target_area_km2`.
+        output_centers (bool, optional): Flag controlling whether to export sub-shape centers. Defaults to False.
+        top_n (int, optional): Number of top MultiPolygons to process. Used for testing large datasets. 
+            By default, all MultiPolygons are processed.
+        shape_attr (str, optional): The shape's attribute used as a prefix for the output shape's identity attribute. 
+            Defaults to "DOTNAME".
+        box_target_area_km2 (float, optional): Target box area used to calculate the number of boxes (clusters).
+        points_per_box (int, optional): Points-per-box dimension. Higher values result in slower but more accurate processing.
+        random_seed (int, optional): Random seed for reproducibility.
+        verbose (bool, optional): Whether to show debug information.
+
+    Returns:
+        str: Local path prefix (output shapes stem).
     """
 
     shape_stem = Path(shape_stem)
@@ -414,7 +498,21 @@ def plot_shapes(shape_stem: Union[str, Path],
                 color: Union[str, None] = None,
                 linewidth: float = 1,
                 **kwargs) -> Tuple[plt.Figure, plt.Axes]:
-
+    """
+    Plots shapes from a shapefile.
+    
+    Args:
+    
+        shape_stem (Union[str, Path]): The path or identifier for the shapefile.
+        ax (plt.Axes, optional): The axis to plot the shapes on. Defaults to None.
+        alpha (float, optional): The transparency of the shapes. Defaults to 1.0.
+        color (Union[str, None], optional): The color of the shapes. Defaults to None.
+        linewidth (float, optional): The width of the line. Defaults to 1.
+        **kwargs: Additional keyword arguments for the plot.
+        
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: The figure and axis objects.
+        """
     # Plot sub-shapes
     if ax is None:
         fig, ax = plt.subplots()
@@ -448,6 +546,19 @@ def plot_subdivision(shape_file: Union[str, Path],
                      shape_color="gray",
                      subdivision_color: str = "red",
                      png_dpi=1800):
+    """
+    Plots shapes and their subdivisions into a PNG file.
+
+    Args:
+        shape_file (Union[str, Path]): The path or identifier for the shapefile.
+        subdivision_stam (Union[str, Path]): The path or identifier for the subdivision shapefile.
+        shape_color (str, optional): The color of the shapes. Defaults to "gray".
+        subdivision_color (str, optional): The color of the subdivisions. Defaults to "red".
+        png_dpi (int, optional): The DPI of the PNG file. Defaults to 1800.
+
+    Returns:
+        None
+    """
     png_file = Path(subdivision_stam).with_suffix(".png")
     fig, ax = plot_shapes(shape_file, color=shape_color, alpha=0.5, linewidth=1.0)
     plot_shapes(subdivision_stam, ax=ax, color=subdivision_color, alpha=0.3, linewidth=0.2)
