@@ -1,0 +1,53 @@
+name: Deploy final documentation
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python and Git
+        uses: ./.github/actions/setup-python-and-git
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          git pull --all
+          pixi global install pandoc
+          uv sync -p 3.12 --group docs
+
+      - name: Build static files
+        id: build
+        run: |
+          cd docs
+          uv run bash build_docs
+
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: docs/_build/html
+
+  # Deployment job
+  deploy:
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      pages: write    
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
