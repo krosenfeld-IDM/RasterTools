@@ -543,7 +543,7 @@ def plot_shapes(shape_stem: Union[str, Path],
 # Plot generated shapes into a file
 def plot_subdivision(shape_file: Union[str, Path],
                      subdivision_stam: Union[str, Path],
-                     shape_color="gray",
+                     shape_color: str = "gray",
                      subdivision_color: str = "red",
                      png_dpi=1800):
     """
@@ -560,6 +560,11 @@ def plot_subdivision(shape_file: Union[str, Path],
         None
     """
     png_file = Path(subdivision_stam).with_suffix(".png")
-    fig, ax = plot_shapes(shape_file, color=shape_color, alpha=0.5, linewidth=1.0)
-    plot_shapes(subdivision_stam, ax=ax, color=subdivision_color, alpha=0.3, linewidth=0.2)
+    fig, ax = plot_shapes(shape_file, alpha=0.5, color=None, linewidth=1.0, edgecolor=shape_color)
+    plot_shapes(subdivision_stam, ax=ax, color='None', alpha=0.3, linewidth=0.2, edgecolor=subdivision_color)
     fig.savefig(png_file, dpi=png_dpi)
+
+
+
+
+

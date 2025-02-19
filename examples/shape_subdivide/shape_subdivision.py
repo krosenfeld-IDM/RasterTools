@@ -12,7 +12,7 @@ from rastertools.shape import plot_subdivision
 from pathlib import Path
 
 # Using example DRC shapefile and raster
-shape_file = Path('../Data/COD_LEV02_ZONES')
+shape_file = Path('../data/COD_LEV02_ZONES')
 
 
 def subdivide_example(area: int = None):
