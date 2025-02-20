@@ -44,14 +44,15 @@ Developer Setup
     cd RasterTools
 
   
-#. Create a Python virtual environment using the preferred tool (here we use Anaconda).::
+#. Create a Python virtual environment using the preferred tool (here we use [uv](curl -LsSf https://astral.sh/uv/install.sh | sh
+)).::
 
-    conda create --name rastertools python=3.9
-    conda activate rastertools  
+    uv venv --python 3.10
+    source .venv/bin/activate
   
 #. Install this package in editable mode (this also installs all the requirements).::
 
-    pip install -e .   
+    uv pip install -e .   
 
 
 Running Tests
@@ -61,7 +62,7 @@ Functional tests:
 
 Install additional packages (like pytest)::
 
-    pip install -r requirements-test.txt
+    uv pip install -r requirements-test.txt
 
 
 Run ``pytest`` command::
