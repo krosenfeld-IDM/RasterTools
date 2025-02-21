@@ -8,10 +8,10 @@ import json
 import zipfile
 
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 
-def read_json(json_path: Union[str, Path]) -> Dict[str, Any]:
+def read_json(json_path: Union[str, Path]) -> dict[str, Any]:
     """
     Reads a JSON file.
 
@@ -23,13 +23,13 @@ def read_json(json_path: Union[str, Path]) -> Dict[str, Any]:
     """
     assert Path(json_path).exists(), f"JSON file {json_path} not found."
     with open(json_path) as fp:
-        data: Dict = json.load(fp)
+        data: dict = json.load(fp)
 
     return data
 
 
 def save_json(
-    data: Dict, json_path: Union[str, Path], sort_keys=False, indent=4
+    data: dict, json_path: Union[str, Path], sort_keys=False, indent=4
 ) -> None:
     """
     Saves a JSON object to a file.
@@ -48,7 +48,7 @@ def save_json(
         json.dump(data, fp, sort_keys=sort_keys, indent=indent)
 
 
-def extract_archive(file_path: Union[str, Path]) -> List[str]:
+def extract_archive(file_path: Union[str, Path]) -> list[str]:
     """
     Extracts a ZIP archive into a directory with the same name as the file's base name.
 

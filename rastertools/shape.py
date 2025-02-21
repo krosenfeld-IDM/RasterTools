@@ -19,7 +19,7 @@ from shapely.prepared import prep
 from sklearn.cluster import KMeans
 from scipy.spatial import Voronoi
 
-from typing import List, Tuple, Union
+from typing import Union
 
 
 class ShapeView:
@@ -32,9 +32,9 @@ class ShapeView:
         self.shape: Shape = shape
         self._points: np.ndarray = None
         self.record: ShapeRecord = record
-        self.center: Tuple[float, float] = (0.0, 0.0)
-        self.paths: List[plth.Path] = []
-        self.areas: List[float] = []
+        self.center: tuple[float, float] = (0.0, 0.0)
+        self.paths: list[plth.Path] = []
+        self.areas: list[float] = []
 
     def __str__(self):
         """String representation used to print or debug WeatherSet objects."""
@@ -91,18 +91,18 @@ class ShapeView:
     @classmethod
     def read_shapes(
         cls, shape_stem: Union[str, Path, Reader]
-    ) -> Tuple[Reader, Shapes[Shape], List[ShapeRecord]]:
+    ) -> tuple[Reader, Shapes[Shape], list[ShapeRecord]]:
         reader: Reader = (
             shape_stem if isinstance(shape_stem, Reader) else Reader(str(shape_stem))
         )
         shapes: Shapes[Shape] = reader.shapes()
-        records: List[ShapeRecord] = reader.records()
+        records: list[ShapeRecord] = reader.records()
         return reader, shapes, records
 
     @classmethod
     def from_file(
         cls, shape_stem: Union[str, Path, Reader], shape_attr: Union[str, None] = None
-    ) -> List[ShapeView]:
+    ) -> list[ShapeView]:
         """
         Loads a shape into a shape view class.
 
@@ -117,7 +117,7 @@ class ShapeView:
         reader, sf1s, sf1r = cls.read_shapes(shape_stem)
 
         # Output dictionary
-        shapes_data: List[cls] = []
+        shapes_data: list[cls] = []
 
         # Iterate of shapes in shapefile
         for k1 in range(len(sf1r)):
@@ -160,7 +160,7 @@ class ShapeView:
 
 def shapes_to_polygons_dict(
     shape_stem: Union[str, Path, Reader], all_multi: bool = True
-) -> List[MultiPolygon]:
+) -> list[MultiPolygon]:
     """
     Converts shapes from a shapefile into a dictionary of MultiPolygons.
 
@@ -169,7 +169,7 @@ def shapes_to_polygons_dict(
         all_multi (bool, optional): If True, ensures all geometries are MultiPolygons. Defaults to True.
 
     Returns:
-        List[MultiPolygon]: A dictionary where keys are shape identifiers and values are MultiPolygon objects.
+        list[MultiPolygon]: A dictionary where keys are shape identifiers and values are MultiPolygon objects.
     """
     # Example loading shape files as multi polygons
     # https://gis.stackexchange.com/questions/70591/creating-shapely-multipolygons-from-shapefile-multipolygons
@@ -186,7 +186,7 @@ def shapes_to_polygons_dict(
 
 def shapes_to_polygons(
     shape_stem: Union[str, Path, Reader], all_multi: bool = True
-) -> List[MultiPolygon]:
+) -> list[MultiPolygon]:
     """
     Converts shapes from a shapefile into a list of MultiPolygons.
 
@@ -195,27 +195,27 @@ def shapes_to_polygons(
         all_multi (bool, optional): If True, ensures all geometries are MultiPolygons. Defaults to True.
 
     Returns:
-        List[MultiPolygon]: A list of MultiPolygon objects.
+        list[MultiPolygon]: A list of MultiPolygon objects.
     """
     d = shapes_to_polygons_dict(shape_stem=shape_stem, all_multi=all_multi)
     return list(d.values())
 
 
 def polygon_contains(
-    polygon: Union[Polygon, MultiPolygon], points: Union[np.ndarray, List[Point]]
+    polygon: Union[Polygon, MultiPolygon], points: Union[np.ndarray, list[Point]]
 ) -> np.ndarray:
     """
     Determines which points are inside a polygon.
 
     Args:
         polygon (Union[Polygon, MultiPolygon]): The polygon to check.
-        points (Union[np.ndarray, List[Point]]): The points to check.
+        points (Union[np.ndarray, list[Point]]): The points to check.
 
     Returns:
         np.ndarray: An array of points that are inside the polygon.
     """
     mp = prep(polygon)  # prep
-    pts: List[Point] = (
+    pts: list[Point] = (
         [Point(t[0], t[1]) for t in points]
         if isinstance(points, np.ndarray)
         else points
@@ -241,7 +241,7 @@ def polygon_area_km2(polygon: Union[Polygon, MultiPolygon]) -> np.float64:
     return area_km2
 
 
-def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, float]]:
+def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> list[tuple[float, float]]:
     """
     Converts a polygon or linear ring to a list of coordinates.
 
@@ -249,7 +249,7 @@ def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, flo
         geom (Union[Polygon, LinearRing]): The polygon or linear ring to convert.
 
     Returns:
-        List[Tuple[float, float]]: A list of coordinates.
+        list[tuple[float, float]]: A list of coordinates.
 
     """
     if isinstance(geom, Polygon):
@@ -260,19 +260,19 @@ def polygon_to_coords(geom: Union[Polygon, LinearRing]) -> List[Tuple[float, flo
         raise TypeError(f"Unsupported geometry type {type(geom)}")
 
     shp_prt: np.ndarray = np.array([(val[0], val[1]) for val in xy_set])
-    coords_list: List[Tuple[float, float]] = shp_prt.tolist()
+    coords_list: list[tuple[float, float]] = shp_prt.tolist()
     return coords_list
 
 
-def polygons_to_parts(polygons: List[Polygon]) -> List[List[Tuple[float, float]]]:
+def polygons_to_parts(polygons: list[Polygon]) -> list[list[tuple[float, float]]]:
     """
     Converts a list of polygons to a list of parts.
 
     Args:
-        polygons (List[Polygon]): A list of polygons to convert.
+        polygons (list[Polygon]): A list of polygons to convert.
 
     Returns:
-        List[List[Tuple[float, float]]]: A list of parts
+        list[list[tuple[float, float]]]: A list of parts
     """
 
     all_polygons = [[p] + list(p.interiors) for p in polygons]
@@ -311,7 +311,7 @@ def area_sphere(shape_points) -> float:
     return tarea
 
 
-def centroid_area(shape_points) -> Tuple[float, float, float]:
+def centroid_area(shape_points) -> tuple[float, float, float]:
     """
     Calculates the area centroid of a polygon based on Cartesian coordinates.
 
@@ -551,7 +551,7 @@ def plot_shapes(
     color: Union[str, None] = None,
     linewidth: float = 1,
     **kwargs,
-) -> Tuple[plt.Figure, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes]:
     """
     Plots shapes from a shapefile.
 
@@ -565,7 +565,7 @@ def plot_shapes(
         **kwargs: Additional keyword arguments for the plot.
 
     Returns:
-        Tuple[plt.Figure, plt.Axes]: The figure and axis objects.
+        tuple[plt.Figure, plt.Axes]: The figure and axis objects.
     """
     # Plot sub-shapes
     if ax is None:
@@ -578,7 +578,7 @@ def plot_shapes(
     kwargs["alpha"] = alpha
     kwargs["linewidth"] = linewidth
 
-    multi_list: List[MultiPolygon] = shapes_to_polygons(shape_stem)
+    multi_list: list[MultiPolygon] = shapes_to_polygons(shape_stem)
     x_min, x_max, y_min, y_max = -360.0, 360.0, -90.0, 90.0
     for multi in multi_list:
         for poly in multi.geoms:

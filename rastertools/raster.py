@@ -10,7 +10,7 @@ from PIL import Image
 from PIL.TiffTags import TAGS
 from scipy import interpolate
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union, Callable
+from typing import Any, Union, Callable
 from rastertools.shape import ShapeView
 
 
@@ -21,7 +21,7 @@ def raster_clip(
     summary_func: Callable = None,
     include_latlon: bool = False,
     quiet: bool = False,
-) -> Dict[str, Union[float, int]]:
+) -> dict[str, Union[float, int]]:
     """
     Extracts data from a raster based on shapes.
 
@@ -130,7 +130,7 @@ def raster_clip_weighted(
     shape_attr: str = "DOTNAME",
     weight_summary_func: Callable = None,
     include_latlon: bool = False,
-) -> Dict[str, Union[float, int]]:
+) -> dict[str, Union[float, int]]:
     """
     Extracts data from a raster based on shapes.
 
@@ -194,7 +194,7 @@ def default_summary_func(v: np.ndarray) -> int:
     return int(np.round(np.sum(v), 0))
 
 
-def get_tiff_tags(raster: Image) -> Dict[str, Any]:
+def get_tiff_tags(raster: Image) -> dict[str, Any]:
     """
     Reads tags from a TIFF file.
 
@@ -210,7 +210,7 @@ def get_tiff_tags(raster: Image) -> Dict[str, Any]:
     return {TAGS[t]: raster.tag[t] for t in dict(raster.tag)}
 
 
-def extract_xy_info_from_raster(raster: Image) -> Tuple[float, float, float, float]:
+def extract_xy_info_from_raster(raster: Image) -> tuple[float, float, float, float]:
     """
     Extracts x, y, dx, and dy from a raster TIFF file.
 
@@ -283,18 +283,18 @@ def subset_matrix_for_clipping(
 
 
 def summary_entry(
-    shape: ShapeView, entry: Union[Dict, float, int], include_latlon: bool
-) -> Union[Dict, float, int]:
+    shape: ShapeView, entry: Union[dict, float, int], include_latlon: bool
+) -> Union[dict, float, int]:
     """
     Summarize the entry for the shape.
 
     Args:
         shape (ShapeView): Shape object.
-        entry (Union[Dict, float, int]): Entry for the shape.
+        entry (Union[dict, float, int]): Entry for the shape.
         include_latlon (bool): Flag to include lat/lon in the dictionary entry.
 
     Returns:
-        Union[Dict, float, int]: The summarized entry for the shape.
+        Union[dict, float, int]: The summarized entry for the shape.
     """
     if include_latlon:
         assert isinstance(entry, dict) and len(entry) > 0, "Invalid entry."
@@ -340,7 +340,7 @@ def is_interior(shape: ShapeView, data_clip: np.ndarray) -> bool:
     return data_bool
 
 
-def print_status(shape: ShapeView, data_dict: Dict, k1: int, shape_count: int) -> None:
+def print_status(shape: ShapeView, data_dict: dict, k1: int, shape_count: int) -> None:
     """Print status message."""
     perc = round(100 * (k1 + 1) / shape_count)
     print(
