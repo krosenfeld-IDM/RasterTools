@@ -579,12 +579,12 @@ def plot_shapes(
     kwargs["linewidth"] = linewidth
 
     multi_list: list[MultiPolygon] = shapes_to_polygons(shape_stem)
-    x_min, x_max, y_min, y_max = -360.0, 360.0, -90.0, 90.0
+    x_min, x_max, y_min, y_max = 360.0, -360.0, 90.0, -90.0
     for multi in multi_list:
         for poly in multi.geoms:
             x, y = poly.exterior.xy
-            x_min, x_max = max(x_min, min(x)), min(x_max, max(x))
-            y_min, y_max = max(y_min, min(y)), min(y_max, max(y))
+            x_min, x_max = min(x_min, min(x)), max(x_max, max(x))
+            y_min, y_max = min(y_min, min(y)), max(y_max, max(y))
             ax.fill(x, y, **kwargs)
 
     # Set the axis limits and show the plot
