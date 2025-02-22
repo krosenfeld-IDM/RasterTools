@@ -418,9 +418,7 @@ def shape_subdivide(
     else:
         sf1new2 = None
 
-    field_names = [f[0] for f in sf1new.fields]
-    assert shape_attr in field_names, f"Shape doesn't contain {shape_attr} field."
-    dotname_index = field_names.index(shape_attr)
+    assert (shape_attr in [f[0] for f in sf1new.fields]), f"Shape doesn't contain {shape_attr} field."
 
     # Second step is to create an underlying mesh of points. If the mesh is
     # equidistant, then the subdivided shapes will be uniform area. Alternatively,
@@ -515,9 +513,9 @@ def shape_subdivide(
 
             # Each Voronoi region will be a new shape; give it a name
             new_recs = list(rec_list[k1]).copy()
-            dotname = rec_list[k1][dotname_index]
+            dotname = rec_list[k1][shape_attr]
             dotname_new = f"{dotname}:A{k2:04d}"
-            new_recs[dotname_index] = dotname_new
+            new_recs = [dotname_new] + new_recs
 
             assert poly_reg.geom_type in ["Polygon", "MultiPolygon"], (
                 "Unsupported geometry type"
