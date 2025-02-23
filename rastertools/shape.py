@@ -512,10 +512,10 @@ def shape_subdivide(
             poly_reg = (Polygon(poly)).intersection(multi)
 
             # Each Voronoi region will be a new shape; give it a name
-            new_recs = list(rec_list[k1]).copy()
+            new_recs = rec_list[k1].as_dict()
             dotname = rec_list[k1][shape_attr]
             dotname_new = f"{dotname}:A{k2:04d}"
-            new_recs = [dotname_new] + new_recs
+            new_recs[shape_attr] = dotname_new
 
             assert poly_reg.geom_type in ["Polygon", "MultiPolygon"], (
                 "Unsupported geometry type"
@@ -527,7 +527,7 @@ def shape_subdivide(
 
             # Add the new shape to the shapefile; splat the record
             sf1new.poly(poly_as_list)
-            sf1new.record(*new_recs)
+            sf1new.record(**new_recs)
 
         if output_centers and new_recs is not None:
             for i, p in enumerate([Point(xy) for xy in sub_node]):
