@@ -1,4 +1,4 @@
-# Starsim docs
+# RasterTools docs
 
 ## Tutorials
 
