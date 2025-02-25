@@ -10,25 +10,31 @@ from PIL import Image
 from PIL.TiffTags import TAGS
 from scipy import interpolate
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union, Callable
+from typing import Any, Union, Callable
 from rastertools.shape import ShapeView
 
 
-def raster_clip(raster_file: Union[str, Path],
-                shape_stem: Union[str, Path],
-                shape_attr: str = "DOTNAME",
-                summary_func: Callable = None,
-                include_latlon: bool = False,
-                quiet: bool = False) -> Dict[str, Union[float, int]]:
+def raster_clip(
+    raster_file: Union[str, Path],
+    shape_stem: Union[str, Path],
+    shape_attr: str = "DOTNAME",
+    summary_func: Callable = None,
+    include_latlon: bool = False,
+    quiet: bool = False,
+) -> dict[str, Union[float, int]]:
     """
-    Extract data from a raster based on shapes.
-    :param raster_file: Local path to a raster file.
-    :param shape_stem: Local path stem referencing a set of shape files.
-    :param shape_attr: The shape attribute name to be used as output dictionary key.
-    :param summary_func: Aggregation func to be used for summarizing clipped data for each shape.
-    :param include_latlon: The flag to include lat/lon in the dict entry.
-    :param quiet: The flag to control if status is printed.
-    :return: Dictionary with dot names as keys and calculates aggregations as values.
+    Extracts data from a raster based on shapes.
+
+    Args:
+        raster_file (str): Local path to a raster file.
+        shape_stem (str): Local path stem referencing a set of shape files.
+        shape_attr (str): The shape attribute name to be used as the output dictionary key.
+        summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool, optional): Flag to include lat/lon in the dictionary entry. Defaults to False.
+        quiet (bool, optional): Flag to control whether status messages are printed. Defaults to False.
+
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
     """
     assert Path(raster_file).is_file(), "Raster file not found."
 
@@ -58,7 +64,8 @@ def raster_clip(raster_file: Union[str, Path],
             shape_len=shape_len,
             summary_func=summary_func,
             include_latlon=include_latlon,
-            quiet=quiet)
+            quiet=quiet,
+        )
 
     data_dict = {}
     for k1, ft in fts.items():
@@ -69,7 +76,24 @@ def raster_clip(raster_file: Union[str, Path],
     return data_dict
 
 
-def raster_clip_single(shp, sparce_data, k1, shape_len, summary_func, include_latlon, quiet):
+def raster_clip_single(
+    shp, sparce_data, k1, shape_len, summary_func, include_latlon, quiet
+):
+    """
+    Extracts data from a raster based on shapes.
+
+    Args:
+        shp (ShapeView): Shape object.
+        sparce_data (np.ndarray): Sparce matrix of raster data.
+        k1 (int): Index of the shape.
+        shape_len (int): Total number of shapes.
+        summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool): Flag to include lat/lon in the dictionary entry.
+        quiet (bool): Flag to control whether status messages are printed.
+
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
+    """
     data_dict = {}
     show_status = not quiet or k1 % 1000 == 0 or k1 in [0, shape_len - 1]
     # Null shape; error in shapefile
@@ -99,21 +123,27 @@ def raster_clip_single(shp, sparce_data, k1, shape_len, summary_func, include_la
     return data_dict
 
 
-def raster_clip_weighted(raster_weight: Union[str, Path],
-                         raster_value: Union[str, Path],
-                         shape_stem: Union[str, Path],
-                         shape_attr: str = "DOTNAME",
-                         weight_summary_func: Callable = None,
-                         include_latlon: bool = False) -> Dict[str, Union[float, int]]:
+def raster_clip_weighted(
+    raster_weight: Union[str, Path],
+    raster_value: Union[str, Path],
+    shape_stem: Union[str, Path],
+    shape_attr: str = "DOTNAME",
+    weight_summary_func: Callable = None,
+    include_latlon: bool = False,
+) -> dict[str, Union[float, int]]:
     """
-    Extract data from a raster based on shapes.
-    :param raster_weight: Local path to a raster file used for weights.
-    :param raster_value: Local path to a raster file used for values.
-    :param shape_stem: Local path stem referencing a set of shape files.
-    :param shape_attr: The shape attribute name to be use as output dictionary key.
-    :param weight_summary_func: Aggregation func to be used for summarizing clipped data for each shape.
-    :param include_latlon: The flag to include lat/lon in the dict entry.
-    :return: Dictionary with dot names as keys and calculates aggregations as values.
+    Extracts data from a raster based on shapes.
+
+    Args:
+        raster_weight (str): Local path to a raster file used for weights.
+        raster_value (str): Local path to a raster file used for values.
+        shape_stem (str): Local path stem referencing a set of shape files.
+        shape_attr (str): The shape attribute name to be used as the output dictionary key.
+        weight_summary_func (Callable): Aggregation function to be used for summarizing clipped data for each shape.
+        include_latlon (bool, optional): Flag to include lat/lon in the dictionary entry. Defaults to False.
+
+    Returns:
+        dict: A dictionary with dot names as keys and calculated aggregations as values.
     """
     assert Path(raster_weight).is_file(), "Population raster file not found."
     assert Path(raster_value).is_file(), "Values raster file not found."
@@ -160,20 +190,37 @@ def raster_clip_weighted(raster_weight: Union[str, Path],
 
 
 def default_summary_func(v: np.ndarray) -> int:
+    """Sum an array and round to the nearest integer."""
     return int(np.round(np.sum(v), 0))
 
 
-def get_tiff_tags(raster: Image) -> Dict[str, Any]:
+def get_tiff_tags(raster: Image) -> dict[str, Any]:
     """
-    Read tags from a TIFF file
-    https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
-    :param raster: TIFF object
-    :return: Dictionary of tag names and values.
+    Reads tags from a TIFF file.
+
+    Reference:
+        https://stackoverflow.com/questions/46477712/reading-tiff-image-metadata-in-python
+
+    Args:
+        raster (TIFF): TIFF object.
+
+    Returns:
+        dict: A dictionary of tag names and values.
     """
     return {TAGS[t]: raster.tag[t] for t in dict(raster.tag)}
 
 
-def extract_xy_info_from_raster(raster: Image) -> Tuple[float, float, float, float]:
+def extract_xy_info_from_raster(raster: Image) -> tuple[float, float, float, float]:
+    """
+    Extracts x, y, dx, and dy from a raster TIFF file.
+
+    Args:
+        raster (TIFF): TIFF object.
+
+    Returns:
+    tuple: A tuple of x, y, dx, and dy.
+    """
+
     # Extract data from raster
     tags = get_tiff_tags(raster)
     point = tags["ModelTiepointTag"]
@@ -191,6 +238,8 @@ def extract_xy_info_from_raster(raster: Image) -> Tuple[float, float, float, flo
 
 
 def init_sparce_matrix(raster: Image) -> np.ndarray:
+    """Initialize a matrix from a raster TIFF file with values > 0"""
+
     # Extract data from raster
     x0, y0, dx, dy = extract_xy_info_from_raster(raster)
 
@@ -206,15 +255,47 @@ def init_sparce_matrix(raster: Image) -> np.ndarray:
     return sparce_data
 
 
-def subset_matrix_for_clipping(shape: ShapeView, sparce_data: np.ndarray, pad: int = 0) -> np.ndarray:
-    clip_bool1 = np.logical_and(sparce_data[:, 0] > shape.xy_min[0] - pad, sparce_data[:, 1] > shape.xy_min[1] - pad)
-    clip_bool2 = np.logical_and(sparce_data[:, 0] < shape.xy_max[0] + pad, sparce_data[:, 1] < shape.xy_max[1] + pad)
+def subset_matrix_for_clipping(
+    shape: ShapeView, sparce_data: np.ndarray, pad: int = 0
+) -> np.ndarray:
+    """
+    Subset the matrix for clipping
+
+    Args:
+        shape (ShapeView): Shape object.
+        sparce_data (np.ndarray): Sparce matrix of raster data.
+        pad (int): Padding for clipping.
+
+    Returns:
+        np.ndarray: A subset of the matrix for clipping.
+    """
+    clip_bool1 = np.logical_and(
+        sparce_data[:, 0] > shape.xy_min[0] - pad,
+        sparce_data[:, 1] > shape.xy_min[1] - pad,
+    )
+    clip_bool2 = np.logical_and(
+        sparce_data[:, 0] < shape.xy_max[0] + pad,
+        sparce_data[:, 1] < shape.xy_max[1] + pad,
+    )
     data_clip = sparce_data[np.logical_and(clip_bool1, clip_bool2), :]
 
     return data_clip
 
 
-def summary_entry(shape: ShapeView, entry: Union[Dict, float, int], include_latlon: bool) -> Union[Dict, float, int]:
+def summary_entry(
+    shape: ShapeView, entry: Union[dict, float, int], include_latlon: bool
+) -> Union[dict, float, int]:
+    """
+    Summarize the entry for the shape.
+
+    Args:
+        shape (ShapeView): Shape object.
+        entry (Union[dict, float, int]): Entry for the shape.
+        include_latlon (bool): Flag to include lat/lon in the dictionary entry.
+
+    Returns:
+        Union[dict, float, int]: The summarized entry for the shape.
+    """
     if include_latlon:
         assert isinstance(entry, dict) and len(entry) > 0, "Invalid entry."
         lon = shape.center[0] if shape else np.nan
@@ -231,6 +312,16 @@ def summary_entry(shape: ShapeView, entry: Union[Dict, float, int], include_latl
 
 
 def is_interior(shape: ShapeView, data_clip: np.ndarray) -> bool:
+    """
+    Check if the data is interior to the shape.
+
+    Args:
+        shape (ShapeView): Shape object.
+        data_clip (np.ndarray): Clipped data.
+
+    Returns:
+        bool: True if the data is interior to the shape.
+    """
     # Track booleans (indicates if lat/long is interior)
     data_bool = np.zeros(data_clip.shape[0], dtype=bool)
 
@@ -238,22 +329,46 @@ def is_interior(shape: ShapeView, data_clip: np.ndarray) -> bool:
     for path_shp, area_prt in zip(shape.paths, shape.areas):
         # Union of positive areas; intersection with negative areas
         if area_prt > 0:
-            data_bool = np.logical_or(data_bool, path_shp.contains_points(data_clip[:, :2]))
+            data_bool = np.logical_or(
+                data_bool, path_shp.contains_points(data_clip[:, :2])
+            )
         else:
-            data_bool = np.logical_and(data_bool, np.logical_not(path_shp.contains_points(data_clip[:, :2])))
+            data_bool = np.logical_and(
+                data_bool, np.logical_not(path_shp.contains_points(data_clip[:, :2]))
+            )
 
     return data_bool
 
 
-def print_status(shape: ShapeView, data_dict: Dict, k1: int, shape_count: int) -> None:
-    perc = round(100*(k1 + 1)/shape_count)
-    print(k1 + 1, 'of', shape_count, f"({perc}%)", shape.name, shape.center, data_dict[shape.name])
+def print_status(shape: ShapeView, data_dict: dict, k1: int, shape_count: int) -> None:
+    """Print status message."""
+    perc = round(100 * (k1 + 1) / shape_count)
+    print(
+        k1 + 1,
+        "of",
+        shape_count,
+        f"({perc}%)",
+        shape.name,
+        shape.center,
+        data_dict[shape.name],
+    )
 
 
-def interpolate_at_weight_data(shape: ShapeView,
-                               weight_clip: np.ndarray,
-                               value_clip: np.ndarray,
-                               data_bool: bool) -> float:
+def interpolate_at_weight_data(
+    shape: ShapeView, weight_clip: np.ndarray, value_clip: np.ndarray, data_bool: bool
+) -> float:
+    """
+    Interpolate at weight data.
+
+    Args:
+        shape (ShapeView): Shape object.
+        weight_clip (np.ndarray): Clipped weight data.
+        value_clip (np.ndarray): Clipped value data.
+        data_bool (bool): Boolean indicating if the data is interior to the shape.
+
+    Returns:
+        float: The interpolated value at weight data.
+    """
     # Calculate population weighted value
     weight = np.sum(weight_clip[data_bool, 2])
 
@@ -264,9 +379,11 @@ def interpolate_at_weight_data(shape: ShapeView,
         # Interpolate at weight, assign -1 for problems
         val_est = interpolate.griddata(*value_args, weight_clip[:, 0:2], fill_value=-1)
         if -1 in val_est:
-            err_dex = (val_est == -1)
+            err_dex = val_est == -1
             # Use the nearest value for problems
-            val_rev = interpolate.griddata(*value_args, weight_clip[err_dex, 0:2], method='nearest')
+            val_rev = interpolate.griddata(
+                *value_args, weight_clip[err_dex, 0:2], method="nearest"
+            )
             val_est[err_dex] = val_rev
         # Use population to weight values
         final_val = np.sum(weight_clip[data_bool, 2] * val_est[data_bool]) / weight
@@ -274,9 +391,11 @@ def interpolate_at_weight_data(shape: ShapeView,
         # No population data, interpolate at boundary, assign -1 for problems
         val_est = interpolate.griddata(*value_args, shape.points[:, 0:2], fill_value=-1)
         if -1 in val_est:
-            err_dex = (val_est == -1)
+            err_dex = val_est == -1
             # Use the nearest value for problems
-            val_rev = interpolate.griddata(*value_args, shape.points[err_dex, 0:2], method='nearest')
+            val_rev = interpolate.griddata(
+                *value_args, shape.points[err_dex, 0:2], method="nearest"
+            )
             val_est[err_dex] = val_rev
 
         # Average values at shape perimeter

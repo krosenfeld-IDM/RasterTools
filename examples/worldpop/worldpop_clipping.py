@@ -11,8 +11,8 @@ from rastertools import raster_clip, utils
 from typing import Dict
 
 # Using example DRC shapefile and raster
-shape_file = Path('../Data/COD_LEV02_ZONES')
-raster_file = Path('../Data/cod_2020_1km_aggregated_unadj.tif')
+shape_file = Path('../data/COD_LEV02_ZONES')
+raster_file = Path('../data/cod_2020_1km_aggregated_unadj.tif')
 
 # Clipping raster with shapes (only pop values)
 popdict1: Dict = raster_clip(raster_file, shape_file)

@@ -4,8 +4,8 @@ from datetime import datetime
 
 VNS = '__version__'
 VDS = '__versiondate__'
-EQS = ' = \''
-NLS = '\'\n'
+EQS = ' = "'
+NLS = '"\n'
 
 
 def bump_version():
@@ -22,7 +22,7 @@ def bump_version():
                 nline = VDS + EQS + dval + NLS
                 fid02.write(nline)
             elif (lval.startswith(VNS)):
-                ver = lval.split('\'')[1]
+                ver = lval.split('"')[1]
                 vnum = ver.split('.')
                 nver = vnum[0] + '.' + vnum[1] + '.'
                 nver = nver + str(int(vnum[2]) + 1)
