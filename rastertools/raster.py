@@ -229,8 +229,8 @@ def extract_xy_info_from_raster(raster: Image) -> tuple[float, float, float, flo
     dx, dy = scale[0], -scale[1]
 
     # Make sure values are in range
-    assert -180 < x0 < 180, "Tie point x coordinate (longitude) have invalid range."
-    assert -85 < y0 < 85, "Tie point y coordinate (latitude) have invalid range."
+    assert np.isclose(max(np.abs(x0), 180), 180), "Tie point x coordinate (longitude) have invalid range."
+    assert np.isclose(max(np.abs(y0), 90), 90), "Tie point y coordinate (latitude) have invalid range."
     assert 0 < dx < 1, "Pixel dx scale has invalid range."
     assert -1 < dy < 0, "Pixel dy scale has invalid range."
 
